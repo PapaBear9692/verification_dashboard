@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Product Verification</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/pharma.png') }}">
+  <!-- Bootstrap 5.3.2 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/batch.css') }}">
+</head>
+
+<body onload="getTimeZone()">
+
+  <!-- Top Bar -->
+  <header class="app-header">
+    <div class="container d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center">
+        <a href="https://www.squarepharma.com.bd/" class="brand d-flex align-items-center" target="_blank" rel="noopener">
+          <img src="{{ url_for('static', filename='images/squarepharma.png') }}" alt="Square Pharmaceuticals PLC." class="brand-logo">
+        </a>
+      </div>
+      <img src="{{ url_for('static', filename='images/square.png') }}" alt="Square Group" class="second-logo">
+    </div>
+  </header>
+
+  <!-- Navigation Bar -->
+  <nav class="app-nav navbar navbar-expand-md">
+    <div class="container">
+
+      <button
+        class="navbar-toggler app-nav-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#appNavbar"
+        aria-controls="appNavbar"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="appNavbar">
+        <ul class="navbar-nav app-nav-list">
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('dashboard') }}">
+              <i class="fas fa-chart-line me-1"></i> Dashboard
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link active" href="{{ url_for('batch') }}">
+              <i class="fas fa-tasks me-1"></i> Assign batch
+            </a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('code') }}">
+              <i class="fas fa-barcode me-1"></i> Generate codes
+            </a>
+          </li>
+
+        </ul>
+
+        <button class="btn btn-outline-danger ms-auto" onclick="logoutUser()">
+          <i class="fas fa-sign-out-alt me-1"></i> Logout
+        </button>
+
+      </div>
+
+    </div>
+  </nav>
+  <!-- /Navigation Bar -->
+
+  <!-- Create Batch Section -->
+  <section class="mb-5 mt-4">
+    <div class="container">
+
+      <div class="section-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="section-title mb-0">
+          <i class="fas fa-layer-group me-2"></i>Create Batch
+        </h2>
+      </div>
+
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+
+          <form id="createBatchForm">
+
+            <div class="row g-3">
+              
+                <!-- Batch Number -->
+                <div class="col-md-6">
+                  <label class="form-label">Batch Number</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    name="batchNumber"
+                    placeholder="e.g. BATCH-2026-001"
+                    required
+                  />
+                </div>
+
+                <!-- Code Count -->
+                <div class="col-md-6">
+                  <label class="form-label">Code Count</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    name="codeCount"
+                    placeholder="e.g. 1000"
+                    min="1"
+                    required
+                  />
+                </div>
+
+              <!-- Product -->
+              <div class="col-md-6">
+                <label class="form-label">Product</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="product"
+                  placeholder="e.g. Premium Tea Pack"
+                  required
+                />
+              </div>
+
+              <!-- Production Date -->
+              <div class="col-md-6">
+                <label class="form-label">Production Date</label>
+                <input
+                  type="date"
+                  class="form-control"
+                  name="productionDate"
+                  required
+                />
+              </div>
+
+              <!-- Factory -->
+              <div class="col-md-6">
+                <label class="form-label">Factory</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="factory"
+                  placeholder="e.g. Factory A"
+                  required
+                />
+              </div>
+
+              <!-- Destination Market -->
+              <div class="col-md-6">
+                <label class="form-label">Destination Market</label>
+                <select class="form-select" name="market" required>
+                  <option value="">Select market</option>
+                  <option>Bangladesh</option>
+                  <option>Europe</option>
+                  <option>Middle East</option>
+                  <option>USA</option>
+                </select>
+              </div>
+
+              <!-- Notes -->
+              <div class="col-12">
+                <label class="form-label">Notes</label>
+                <textarea
+                  class="form-control"
+                  name="notes"
+                  rows="3"
+                  placeholder="Optional notes about this batch"
+                ></textarea>
+              </div>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-between align-items-center mt-4">
+              <!-- Reset Button (Left side) -->
+              <button
+                type="button"
+                class="btn btn-outline-secondary"
+                onclick="resetCreateBatchForm()"
+              >
+                Reset
+              </button>
+
+              <!-- Create Batch Button (Right side) -->
+              <button
+                type="button"
+                class="btn btn-primary"
+                onclick="openBatchConfirmation()"
+              ><i class="fas fa-layer-group me-2"></i>
+                Create Batch
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+  <!-- /Create Batch Section -->
+
+  <!-- Export Batch Section -->
+  <section class="section-block">
+    <div class="container">
+
+      <div class="section-header d-flex justify-content-between align-items-center mb-3">
+        <h2 class="section-title mb-0">
+          <i class="fas fa-file-export me-1"></i>Export Batch Data
+        </h2>
+      </div>
+
+      <div class="card-box">
+
+        <form id="exportBatchForm">
+          <div class="row g-3 align-items-end">
+
+            <!-- Batch Input -->
+            <div class="col-md-4">
+              <label class="form-label">Batch Number</label>
+              <input
+                type="text"
+                class="form-control"
+                name="exportBatch"
+                placeholder="Enter batch number, e.g. BATCH-2026-001"
+                required
+              />
+            </div>
+
+            <!-- Export Type -->
+            <div class="col-md-4">
+              <label class="form-label">Export Content</label>
+              <select class="form-select" name="exportType" required>
+                <option value="summary">Summary only</option>
+                <option value="codes">Codes only</option>
+                <option value="both">Summary + Codes</option>
+              </select>
+            </div>
+
+            <!-- Export Format -->
+            <div class="col-md-4">
+              <label class="form-label">File Format</label>
+              <select class="form-select" name="exportFormat" required>
+                <option value="pdf">PDF</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-end mt-4 gap-2">
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              onclick="resetExportForm()"
+            >
+              Reset
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="exportBatchData()"
+            >
+              <i class="fas fa-file-export me-1"></i>
+              Export
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center">
+      <p class="mb-0">© 2026 <a href="https://www.squarepharma.com.bd" target="_blank" rel="noopener">Square Pharmaceuticals PLC.</a> All rights reserved.</p>
+      <div class="footer-links">
+        <a href="https://www.squarepharma.com.bd/about-us.php" target="_blank" rel="noopener">About</a>
+        <a href="https://www.squarepharma.com.bd/contact-us.php" target="_blank" rel="noopener">Contact</a>
+        <a href="https://www.facebook.com/SquarePharmaLtd/" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://bd.linkedin.com/company/square-pharmaceuticals" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Create Batch Confirmation Modal -->
+  <div
+    class="modal fade"
+    id="batchConfirmModal"
+    tabindex="-1"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Confirm Batch Creation</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="text-muted mb-3">
+            Please review the batch details before confirming.
+          </p>
+
+          <div class="row g-3">
+
+            <div class="col-md-6">
+              <strong>Batch Number:</strong>
+              <div id="confirmBatchNumber"></div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>Code Count:</strong>
+              <div id="confirmCodeCount"></div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>Product:</strong>
+              <div id="confirmProduct"></div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>Production Date:</strong>
+              <div id="confirmProductionDate"></div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>Factory:</strong>
+              <div id="confirmFactory"></div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>Destination Market:</strong>
+              <div id="confirmMarket"></div>
+            </div>
+
+            <div class="col-12">
+              <strong>Notes:</strong>
+              <div id="confirmNotes"></div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Edit
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            onclick="confirmCreateBatch()"
+          >
+            Confirm & Create
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scroll To Top Button -->
+  <button id="backToTopBtn" class="back-to-top-btn" style="display:none" onclick="scrollToTop()">↑</button>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+  <!-- Your existing JS -->
+  <script src="{{ url_for('static', filename='js/batch.js') }}"></script>
+
+</body>
+</html>

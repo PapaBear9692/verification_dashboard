@@ -14,5 +14,22 @@ def login():
 def register():
     return render_template('register.html')
 
+@app.route('/reset', methods=['GET'])
+def reset():
+    return render_template('reset.html')
+
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/batch', methods=['GET'])
+def batch():
+    return render_template('batch.html')
+
+@app.route('/code', methods=['GET'])
+def code():
+    return render_template('code.html')
+ 
+ 
 if __name__ == '__main__':
     app.run(debug=True, port=5500)
