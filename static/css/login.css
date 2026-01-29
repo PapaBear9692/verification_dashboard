@@ -1,0 +1,176 @@
+:root {
+  --brand: #027f0f;
+  --brand-soft: rgba(2, 127, 15, 0.06);
+  --text: #0f172a;
+  --muted: #6b7280;
+  --border-subtle: #e5e7eb;
+  --surface: #ffffff;
+  --bg: #f5f6f8;
+  --radius-lg: 0.9rem;
+  --shadow-card: 0 14px 35px rgba(15, 23, 42, 0.08);
+}
+
+body {
+  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Header */
+.app-header {
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+  height: 70px;
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 99;
+}
+
+.brand {
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.brand-logo {
+  height: 70px;
+  width: auto;
+}
+
+.second-logo {
+  height: 52px;
+  width: auto;
+}
+
+.app-header .container,
+.app-footer .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Login Layout */
+.login-wrapper {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2.2rem;
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+}
+
+/* Typography */
+.card-eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.login-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin: 0.3rem 0;
+}
+
+.login-subtitle {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Form */
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.form-control {
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.75rem;
+}
+
+.form-control:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px rgba(2, 127, 15, 0.35);
+}
+
+/* Button */
+.btn-primary {
+  background-color: var(--brand);
+  border-color: var(--brand);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  padding: 0.45rem;
+}
+
+.btn-primary:hover {
+  background-color: #02630c;
+}
+
+/* Error */
+.error-text {
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.4rem;
+}
+
+/* Footer */
+.login-footer {
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--muted);
+  margin-top: 1.5rem;
+}
+
+.login-footer a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.login-footer a:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+/* Register + Forgot Password */
+.auth-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.auth-link {
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.auth-link:hover {
+  color: var(--brand);
+  text-decoration: none;
+}
+
+.auth-sep {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1;
+}
