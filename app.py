@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template
-
+from models.dbModel import ProductDB
 app = Flask(__name__)
 
 @app.route('/', methods=['GET'])
@@ -21,6 +21,12 @@ def reset():
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
     return render_template('dashboard.html')
+
+@app.route('/api/dashboard-data')
+def get_dashboard_data():
+    db = ProductDB()
+    data = db.get_dashboard_stats()
+    return jsonify(data)
 
 @app.route('/batch', methods=['GET'])
 def batch():

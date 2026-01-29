@@ -4,22 +4,16 @@
   <title>Product Verification</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/pharma.png') }}">
-  <!-- Bootstrap 5.3.2 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-  <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap" rel="stylesheet">
-  <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 
-<body onload="getTimeZone()">
+<body onload="initDashboard()">
 
-  <!-- Top Bar -->
   <header class="app-header">
     <div class="container d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center">
@@ -31,477 +25,226 @@
     </div>
   </header>
 
-  <!-- Navigation Bar -->
   <nav class="app-nav navbar navbar-expand-md">
     <div class="container">
-
-      <button
-        class="navbar-toggler app-nav-toggler"
-        type="button"
-        data-bs-toggle="collapse"
-        data-bs-target="#appNavbar"
-        aria-controls="appNavbar"
-        aria-expanded="false"
-        aria-label="Toggle navigation"
-      >
+      <button class="navbar-toggler app-nav-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#appNavbar" aria-controls="appNavbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <div class="collapse navbar-collapse" id="appNavbar">
         <ul class="navbar-nav app-nav-list">
-
-          <li class="nav-item">
-            <a class="nav-link active" href="{{ url_for('dashboard') }}">
-              <i class="fas fa-chart-line me-1"></i> Dashboard
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('batch') }}">
-              <i class="fas fa-tasks me-1"></i> Assign batch
-            </a>
-          </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('code') }}">
-              <i class="fas fa-barcode me-1"></i> Generate codes
-            </a>
-          </li>
-
+          <li class="nav-item"><a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="fas fa-chart-line me-1"></i> Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('batch') }}"><i class="fas fa-tasks me-1"></i> Assign batch</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('code') }}"><i class="fas fa-barcode me-1"></i> Generate codes</a></li>
         </ul>
-
         <button class="btn btn-outline-danger ms-auto" onclick="logoutUser()">
           <i class="fas fa-sign-out-alt me-1"></i> Logout
         </button>
-
       </div>
-
     </div>
   </nav>
-  <!-- /Navigation Bar -->
 
-  <!-- Main -->
   <main class="mt-4">
     <div class="container">
       <div class="row align-items-stretch justify-content-center">
-
-        <!-- Welcome card -->
         <div class="col-12 col-md-8 col-lg-8 mb-4">
           <div class="card-box h-100 text-left">
-            <div class="card-header-line">
-              <span class="card-eyebrow">Dashboard</span>
-            </div>
+            <div class="card-header-line"><span class="card-eyebrow">Dashboard</span></div>
             <h3 class="card-title">Welcome</h3>
-            <p class="card-subtitle mb-0">user name</p>
+            <p class="card-subtitle mb-0" id="user-name-display">Loading user...</p>
           </div>
         </div>
-
-        <!-- Assign code card -->
         <div class="col-12 col-md-4 col-lg-4 mb-4">
           <div class="assign-card-box h-100 text-left">
             <span class="card-eyebrow">Action</span>
             <h3 class="card-title">Assign Batch</h3>
             <p class="card-subtitle">Assign a new verification batch.</p>
-
             <div class="assign-code-content mt-3">
               <a href="{{ url_for('batch') }}" class="btn btn-primary btn-quiet">Assign</a>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </main>
 
-  <!-- Operational Health Check -->
   <section class="section-block">
     <div class="container">
       <div class="section-header mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-heartbeat me-1"></i>Operational Health
-        </h2>
+        <h2 class="section-title mb-0"><i class="fas fa-heartbeat me-1"></i>Operational Health</h2>
       </div>
-
       <div class="row">
         <div class="col-md-3 mb-4">
           <div class="report-card">
             <div class="card-eyebrow">System</div>
-            <div class="report-value text-success">Healthy</div>
+            <div class="report-value" id="stat-system-health">--</div>
           </div>
         </div>
-
         <div class="col-md-3 mb-4">
           <div class="report-card">
             <div class="card-eyebrow">Verifications Today</div>
-            <div class="report-value">1,284</div>
+            <div class="report-value" id="stat-verifications-today">--</div>
           </div>
         </div>
-
         <div class="col-md-3 mb-4">
           <div class="report-card">
             <div class="card-eyebrow">Suspicious Ratio</div>
-            <div class="report-value text-warning">3.2%</div>
+            <div class="report-value" id="stat-suspicious-ratio">--</div>
           </div>
         </div>
-
         <div class="col-md-3 mb-4">
           <div class="report-card">
             <div class="card-eyebrow">Peak (1h)</div>
-            <div class="report-value">214</div>
+            <div class="report-value" id="stat-peak-hour">--</div>
           </div>
         </div>
       </div>
     </div>
   </section>
-  <!-- /Operational Health Check -->
 
-  <!-- Verification Trends -->
   <section class="section-block">
     <div class="container">
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-chart-bar me-1"></i>Verification Trends
-        </h2>
+        <h2 class="section-title mb-0"><i class="fas fa-chart-bar me-1"></i>Verification Trends</h2>
       </div>
-
       <div class="row align-items-stretch">
-
-        <!-- Today -->
         <div class="col-12 col-md-4 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Today</div>
-            <div class="trend-value">1,284</div>
+            <div class="trend-value" id="trend-today">--</div>
             <div class="trend-label">Verifications</div>
           </div>
         </div>
-
-        <!-- Last 7 Days -->
         <div class="col-12 col-md-4 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Last 7 Days</div>
-            <div class="trend-value">8,942</div>
+            <div class="trend-value" id="trend-week">--</div>
             <div class="trend-label">Verifications</div>
           </div>
         </div>
-
-        <!-- Last 30 Days -->
         <div class="col-12 col-md-4 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Last 30 Days</div>
-            <div class="trend-value">36,517</div>
+            <div class="trend-value" id="trend-month">--</div>
             <div class="trend-label">Verifications</div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-  <!-- /Verification Trends -->
 
-  <!-- Verification Breakdown -->
   <section class="section-block">
     <div class="container">
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-pie-chart me-1"></i>Verification Breakdown
-        </h2>
+        <h2 class="section-title mb-0"><i class="fas fa-pie-chart me-1"></i>Verification Breakdown</h2>
       </div>
-
       <div class="row align-items-stretch">
-
-        <!-- Genuine -->
         <div class="col-12 col-md-6 col-lg-3 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Genuine</div>
-            <div class="breakdown-value text-success">28,745</div>
+            <div class="breakdown-value text-success" id="breakdown-genuine">--</div>
             <div class="breakdown-label">Valid Verifications</div>
           </div>
         </div>
-
-        <!-- Invalid -->
         <div class="col-12 col-md-6 col-lg-3 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Invalid</div>
-            <div class="breakdown-value text-danger">1,132</div>
+            <div class="breakdown-value text-danger" id="breakdown-invalid">--</div>
             <div class="breakdown-label">Fake / Tampered</div>
           </div>
         </div>
-
-        <!-- Already Used -->
         <div class="col-12 col-md-6 col-lg-3 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Already Used</div>
-            <div class="breakdown-value text-warning">2,418</div>
+            <div class="breakdown-value text-warning" id="breakdown-repeated">--</div>
             <div class="breakdown-label">Repeated Checks</div>
           </div>
         </div>
-
-        <!-- Total Generated -->
         <div class="col-12 col-md-6 col-lg-3 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Total Generated</div>
-            <div class="breakdown-value">32,295</div>
+            <div class="breakdown-value" id="breakdown-total">--</div>
             <div class="breakdown-label">Verification Codes</div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-  <!-- /Verification Breakdown -->
 
-  <!-- Hot Products / Batches -->
   <section class="section-block">
     <div class="container">
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-star me-1"></i>Hot Products / Batches
-        </h2>
+        <h2 class="section-title mb-0"><i class="fas fa-star me-1"></i>Hot Products / Batches</h2>
       </div>
-
       <div class="row">
         <div class="col-12 mb-4">
-          <div class="report-card h-100">
-
+          <div class="report-card h-100" id="hot-products-container">
             <div class="card-eyebrow mb-3">Most Scanned</div>
-
-            <!-- Header -->
             <div class="hot-row hot-header">
               <span>Product</span>
               <span>Batch</span>
               <span class="text-right">Scans</span>
             </div>
-
-            <!-- Item -->
-            <div class="hot-row">
-              <span>Alatrol</span>
-              <span>NXA-2407</span>
-              <span class="hot-value">3,214</span>
             </div>
-
-            <div class="hot-row">
-              <span>Seclo 20</span>
-              <span>SCL-1123</span>
-              <span class="hot-value">2,879</span>
-            </div>
-
-            <div class="hot-row">
-              <span>ACE Plus</span>
-              <span>ACP-0824</span>
-              <span class="hot-value">2,156</span>
-            </div>
-
-            <div class="hot-row">
-              <span>Fexo</span>
-              <span>FXO-0524</span>
-              <span class="hot-value">1,942</span>
-            </div>
-
-          </div>
         </div>
       </div>
     </div>
   </section>
-  <!-- /Hot Products / Batches -->
 
-  <!-- Suspicious Activity Snapshot -->
   <section class="section-block">
     <div class="container">
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-exclamation-triangle me-1"></i>Suspicious Activity Snapshot
-        </h2>
+        <h2 class="section-title mb-0"><i class="fas fa-exclamation-triangle me-1"></i>Suspicious Activity Snapshot</h2>
       </div>
-
       <div class="row align-items-stretch">
-
-        <!-- Same Code Attempts -->
         <div class="col-12 col-md-6 col-lg-4 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">Repeated Code Attempts</div>
-            <div class="suspicious-value text-warning">417</div>
+            <div class="suspicious-value text-warning" id="stat-repeated-attempts">--</div>
             <div class="suspicious-label">Same code scanned multiple times</div>
           </div>
         </div>
-
-        <!-- IP Spamming -->
         <div class="col-12 col-md-6 col-lg-4 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">IP Spamming</div>
-            <div class="suspicious-value text-danger">89</div>
+            <div class="suspicious-value text-danger" id="stat-ip-spamming">--</div>
             <div class="suspicious-label">IPs exceeding rate limits</div>
           </div>
         </div>
-
-        <!-- High Risk Events -->
         <div class="col-12 col-md-12 col-lg-4 mb-4">
           <div class="report-card h-100 text-center">
             <div class="card-eyebrow mb-2">High-Risk Events</div>
-            <div class="suspicious-value">31</div>
+            <div class="suspicious-value" id="stat-high-risk">--</div>
             <div class="suspicious-label">Auto-flagged incidents</div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
-  <!-- /Suspicious Activity Snapshot -->
 
-  <!-- Recent Events Feed -->
   <section class="section-block">
     <div class="container">
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-history me-1"></i>Recent Events
-        </h2>
+        <h2 class="section-title mb-0"><i class="fas fa-history me-1"></i>Recent Events</h2>
       </div>
-
       <div class="row align-items-stretch">
-
-        <!-- Recent Verifications -->
         <div class="col-12 col-lg-6 mb-4">
           <div class="report-card h-100">
-
             <div class="card-eyebrow mb-3">Last 20 Verifications</div>
-
-            <div class="event-feed">
-
-              <div class="event-row">
-                <span class="event-time">10:42</span>
-                <span class="event-text">
-                  Code <strong>HKUV679K11</strong> verified
-                </span>
-                <span class="event-status text-success">Genuine</span>
+            <div class="event-feed" id="list-recent-verifications">
               </div>
-
-              <div class="event-row">
-                <span class="event-time">10:40</span>
-                <span class="event-text">
-                  Code <strong>QWEU982L77</strong> already used
-                </span>
-                <span class="event-status text-warning">Repeated</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">10:36</span>
-                <span class="event-text">
-                  Invalid code attempt <strong>ASD8892XX</strong>
-                </span>
-                <span class="event-status text-danger">Invalid</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">10:36</span>
-                <span class="event-text">
-                  Invalid code attempt <strong>ASD8892XX</strong>
-                </span>
-                <span class="event-status text-danger">Invalid</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">10:36</span>
-                <span class="event-text">
-                  Invalid code attempt <strong>ASD8892XX</strong>
-                </span>
-                <span class="event-status text-danger">Invalid</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">10:36</span>
-                <span class="event-text">
-                  Invalid code attempt <strong>ASD8892XX</strong>
-                </span>
-                <span class="event-status text-danger">Invalid</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">10:36</span>
-                <span class="event-text">
-                  Invalid code attempt <strong>ASD8892XX</strong>
-                </span>
-                <span class="event-status text-danger">Invalid</span>
-              </div>
-
-            </div>
-
           </div>
         </div>
-
-        <!-- Recent Admin Actions -->
         <div class="col-12 col-lg-6 mb-4">
           <div class="report-card h-100">
-
             <div class="card-eyebrow mb-3">Last 20 Admin Actions</div>
-
-            <div class="event-feed">
-
-              <div class="event-row">
-                <span class="event-time">09:58</span>
-                <span class="event-text">
-                  Generated <strong>1,000</strong> codes
-                </span>
-                <span class="event-status">Admin</span>
+            <div class="event-feed" id="list-admin-actions">
               </div>
-
-              <div class="event-row">
-                <span class="event-time">09:58</span>
-                <span class="event-text">
-                  Generated <strong>1,000</strong> codes
-                </span>
-                <span class="event-status">Admin</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">09:58</span>
-                <span class="event-text">
-                  Generated <strong>1,000</strong> codes
-                </span>
-                <span class="event-status">Admin</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">09:58</span>
-                <span class="event-text">
-                  Generated <strong>1,000</strong> codes
-                </span>
-                <span class="event-status">Admin</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">09:58</span>
-                <span class="event-text">
-                  Generated <strong>1,000</strong> codes
-                </span>
-                <span class="event-status">Admin</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">09:41</span>
-                <span class="event-text">
-                  Disabled suspicious IP <strong>103.45.xxx.xxx</strong>
-                </span>
-                <span class="event-status text-danger">Security</span>
-              </div>
-
-              <div class="event-row">
-                <span class="event-time">09:12</span>
-                <span class="event-text">
-                  Assigned batch <strong>NXA-2407</strong>
-                </span>
-                <span class="event-status">System</span>
-              </div>
-
-            </div>
-
           </div>
         </div>
-
       </div>
     </div>
   </section>
-  <!-- /Recent Events Feed -->
 
-  <!-- Footer -->
   <footer class="app-footer">
     <div class="container d-flex flex-wrap justify-content-between align-items-center">
       <p class="mb-0">© 2026 <a href="https://www.squarepharma.com.bd" target="_blank" rel="noopener">Square Pharmaceuticals PLC.</a> All rights reserved.</p>
@@ -514,13 +257,10 @@
     </div>
   </footer>
 
-  <!-- Scroll To Top Button -->
   <button id="backToTopBtn" class="back-to-top-btn" style="display:none" onclick="scrollToTop()">↑</button>
 
-  <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-
-  <!-- Your existing JS -->
+  
   <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
 </body>
