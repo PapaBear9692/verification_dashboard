@@ -3,22 +3,24 @@ from dotenv import load_dotenv
 import os
 import platform
 
+load_dotenv()  # Load environment variables from .env file
+        
+if platform.system() == "Windows":
+    oracledb.init_oracle_client(lib_dir="C:/oracle/product/instantclient_23_9")
+else:
+    oracledb.init_oracle_client()
+
+
 
 class ProductDB:
     # Enable thick mode
     try:
-        load_dotenv()  # Load environment variables from .env file
-        
-        if platform.system() == "Windows":
-            oracledb.init_oracle_client(lib_dir="C:/oracle/product/instantclient_23_9")
-        else:
-            oracledb.init_oracle_client()
-        
         print("Trying to connect to Database...")
         conn = oracledb.connect(user= os.getenv("DB_USER"),
                                 password= os.getenv("DB_PASSWORD"), 
                                 dsn= os.getenv("DB_DSN"))
         print("Connected successfully..!")
+        conn.close()
     except oracledb.DatabaseError as e:
         print("Connection failed:", e)
     
