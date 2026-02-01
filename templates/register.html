@@ -37,7 +37,7 @@
 
         <div class="section-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">
-            <i class="fas fa-user-plus me-2"></i>User Registration
+            <i class="fas fa-user-plus me-2"></i>New User Registration
         </h2>
         </div>
 
@@ -48,6 +48,31 @@
 
             <div class="row g-3">
                 
+              <!-- Username -->
+                <div class="col-md-6">
+                <label class="form-label">Username</label>
+                <input
+                    type="text"
+                    class="form-control"
+                    name="username"
+                    placeholder="e.g. john_doe26"
+                    required
+                />
+                </div>
+
+                <!-- employeeID -->
+                <div class="col-md-6">
+                <label class="form-label">Employee ID</label>
+                <input
+                    type="number"
+                    class="form-control"
+                    name="employeeID"
+                    placeholder="e.g. 000001667"
+                    maxlength="8"
+                    required
+                />
+                </div>
+
                 <!-- Full Name -->
                 <div class="col-md-6">
                 <label class="form-label">Full Name</label>
@@ -60,15 +85,15 @@
                 />
                 </div>
 
-                <!-- Username / Email -->
+                <!-- Phone Number -->
                 <div class="col-md-6">
-                <label class="form-label">Email</label>
+                <label class="form-label">Phone Number</label>
                 <input
-                    type="email"
+                    type="tel"
                     class="form-control"
-                    name="email"
-                    placeholder="e.g. john@example.com"
-                    required
+                    name="phone"
+                    maxlength="11"
+                    placeholder="01XXXXXXXXX"
                 />
                 </div>
 
@@ -96,25 +121,13 @@
                 />
                 </div>
 
-                <!-- Phone Number -->
-                <div class="col-md-6">
-                <label class="form-label">Phone Number</label>
-                <input
-                    type="tel"
-                    class="form-control"
-                    name="phone"
-                    placeholder="Optional"
-                />
-                </div>
-
                 <!-- Role / User Type -->
                 <div class="col-md-6">
                 <label class="form-label">User Role</label>
-                <select class="form-select" name="role">
+                <select class="form-select" name="role" required>
                     <option value="">Select role</option>
-                    <option value="Admin">Admin</option>
-                    <option value="User">User</option>
-                    <option value="Manager">Manager</option>
+                    <option value="User">Administrator</option>
+                    <option value="Manager">Viewer</option>
                 </select>
                 </div>
 

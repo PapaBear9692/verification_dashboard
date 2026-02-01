@@ -40,7 +40,6 @@
     <div class="login-card">
 
       <div class="text-center mb-4">
-        <span class="card-eyebrow">Secure Access</span>
         <h2 class="login-title">Admin Login</h2>
         <p class="login-subtitle">Sign in to Product Verification System</p>
       </div>
@@ -54,14 +53,14 @@
 
         <div class="mb-3">
           <label class="form-label">Password</label>
-          <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+          <input type="password" id="password" class="form-control" placeholder="Enter password" minlength="8" maxlength="16" required>
         </div>
 
         <div id="loginError" class="error-text d-none">
           <i class="fas fa-circle-exclamation"></i> Invalid credentials
         </div>
 
-        <button type="submit" class="btn btn-primary w-100 mt-3">
+        <button type="submit" class="btn btn-success w-100 mt-3">
           <i class="fas fa-lock me-1"></i> Login
         </button>
       </form>

@@ -86,6 +86,25 @@ class ProductDB:
 
         return data
 
+
+    def authenticate(self, username, password):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            if username == "admin" and password == "admin123":
+                return 25
+            else:
+                return None
+
+        except Exception as e:
+            print("Authentication failed:", e)
+            return None
+
+        finally:
+            cursor.close()
+            conn.close()
+        
     # Call a stored procedure that returns multiple OUT parameters
     def get_authentication(self, input_str):
         conn = self._get_connection()

@@ -112,7 +112,7 @@ body {
 }
 
 /* Button */
-.btn-primary {
+.btn-success {
   background-color: var(--brand);
   border-color: var(--brand);
   border-radius: 999px;
@@ -120,7 +120,7 @@ body {
   padding: 0.45rem;
 }
 
-.btn-primary:hover {
+.btn-success:hover {
   background-color: #02630c;
 }
 

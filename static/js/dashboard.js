@@ -126,9 +126,20 @@ function getTimeZone() {
     console.log("Timezone loaded");
 }
 
-function logoutUser() {
-    // In real app: fetch('/logout')
-    alert("Logging out...");
+async function logoutUser() {
+    const response = await fetch("/logout", {
+        method: "GET", 
+        headers: {
+            "Content-Type": "application/json"
+        }
+    });
+
+    const data = await response.json();
+    if (response.ok) {
+        window.location.href = data.redirect;
+    } else {
+        alert("Logout failed. Please try again.");
+    }
 }
 
 // Scroll Button Logic
