@@ -104,7 +104,53 @@ class ProductDB:
         finally:
             cursor.close()
             conn.close()
-        
+    
+
+    def user_exists(self, employee_id):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            return False
+
+        except Exception as e:
+            print("User existence check failed:", e)
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def create_user(self, username, full_name, employee_id, phone, role, password):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            return 1
+
+        except Exception as e:
+            print("User creation failed:", e)
+            return None
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    def reset_password(self, username, new_password):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            return True
+
+        except Exception as e:
+            print("Password reset failed:", e)
+            return False
+
+        finally:
+            cursor.close()
+            conn.close()
+    
     # Call a stored procedure that returns multiple OUT parameters
     def get_authentication(self, input_str):
         conn = self._get_connection()

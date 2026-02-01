@@ -40,20 +40,30 @@
     <div class="auth-card">
 
       <div class="text-center mb-4">
-        <span class="card-eyebrow">Secure Access</span>
         <h2 class="auth-title">Reset Password</h2>
         <p class="auth-subtitle">Submit your request. Admin approval is required.</p>
       </div>
 
       <form id="resetForm" novalidate>
         <div class="mb-3">
-          <label class="form-label">Email or Username</label>
+          <label class="form-label">Username</label>
           <input
             type="text"
-            id="identifier"
+            id="username"
             class="form-control"
-            placeholder="Enter email or username"
+            placeholder="Enter username"
             autocomplete="username"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Employee ID</label>
+          <input
+            type="text"
+            id="employeeId"
+            class="form-control"
+            placeholder="Enter employee ID"
             required
           />
         </div>
@@ -65,7 +75,7 @@
             id="newPassword"
             class="form-control"
             placeholder="Enter new password"
-            autocomplete="new-password"
+            minlength="8"
             required
           />
         </div>
@@ -74,10 +84,10 @@
           <label class="form-label">Confirm New Password</label>
           <input
             type="password"
-            id="confirmPassword"
+            id="confirmNewPassword"
             class="form-control"
             placeholder="Re-enter new password"
-            autocomplete="new-password"
+            minlength="8"
             required
           />
           <div id="matchError" class="error-text d-none">

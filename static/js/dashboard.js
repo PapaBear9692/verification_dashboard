@@ -13,7 +13,7 @@ function initDashboard() {
 
 function fetchDashboardData() {
     // 1. Fetch data from Python Flask Endpoint
-    fetch('/api/dashboard-data')
+    fetch('/dashboard-data')
         .then(response => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');

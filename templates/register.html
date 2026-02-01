@@ -35,156 +35,170 @@
   <section class="mb-5 mt-5">
     <div class="container">
 
-        <div class="section-header d-flex justify-content-between align-items-center mb-3">
+      <div class="section-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">
-            <i class="fas fa-user-plus me-2"></i>New User Registration
+          <i class="fas fa-user-plus me-2"></i>New User Registration
         </h2>
-        </div>
+      </div>
 
-        <div class="card shadow-sm border-0">
+      <div class="card shadow-sm border-0">
         <div class="card-body">
 
-            <form id="registerForm" onsubmit="openConfirmModal(event)">
+          <form id="registerForm" onsubmit="openConfirmModal(event)">
 
             <div class="row g-3">
-                
+
               <!-- Username -->
-                <div class="col-md-6">
+              <div class="col-md-6">
                 <label class="form-label">Username</label>
                 <input
-                    type="text"
-                    class="form-control"
-                    name="username"
-                    placeholder="e.g. john_doe26"
-                    required
+                  id="username"
+                  type="text"
+                  class="form-control"
+                  name="username"
+                  placeholder="e.g. john_doe26"
+                  required
                 />
-                </div>
+              </div>
 
-                <!-- employeeID -->
-                <div class="col-md-6">
+              <!-- employeeID -->
+              <div class="col-md-6">
                 <label class="form-label">Employee ID</label>
                 <input
-                    type="number"
-                    class="form-control"
-                    name="employeeID"
-                    placeholder="e.g. 000001667"
-                    maxlength="8"
-                    required
+                  id="employeeID"
+                  type="number"
+                  class="form-control"
+                  name="employeeID"
+                  placeholder="e.g. 000001667"
+                  maxlength="8"
+                  required
                 />
-                </div>
+              </div>
 
-                <!-- Full Name -->
-                <div class="col-md-6">
+              <!-- Full Name -->
+              <div class="col-md-6">
                 <label class="form-label">Full Name</label>
                 <input
-                    type="text"
-                    class="form-control"
-                    name="fullName"
-                    placeholder="e.g. John Doe"
-                    required
+                  id="fullName"
+                  type="text"
+                  class="form-control"
+                  name="fullName"
+                  placeholder="e.g. John Doe"
+                  required
                 />
-                </div>
+              </div>
 
-                <!-- Phone Number -->
-                <div class="col-md-6">
+              <!-- Phone Number -->
+              <div class="col-md-6">
                 <label class="form-label">Phone Number</label>
                 <input
-                    type="tel"
-                    class="form-control"
-                    name="phone"
-                    maxlength="11"
-                    placeholder="01XXXXXXXXX"
+                  id="phone"
+                  type="tel"
+                  class="form-control"
+                  name="phone"
+                  maxlength="11"
+                  placeholder="01XXXXXXXXX"
                 />
-                </div>
+              </div>
 
-                <!-- Password -->
-                <div class="col-md-6">
+              <!-- Password -->
+              <div class="col-md-6">
                 <label class="form-label">Password</label>
                 <input
-                    type="password"
-                    class="form-control"
-                    name="password"
-                    placeholder="Enter password"
-                    required
+                  id="password"
+                  type="password"
+                  class="form-control"
+                  name="password"
+                  placeholder="Enter password"
+                  required
                 />
-                </div>
+              </div>
 
-                <!-- Confirm Password -->
-                <div class="col-md-6">
+              <!-- Confirm Password -->
+              <div class="col-md-6">
                 <label class="form-label">Confirm Password</label>
                 <input
-                    type="password"
-                    class="form-control"
-                    name="confirmPassword"
-                    placeholder="Re-enter password"
-                    required
+                  id="confirmPassword"
+                  type="password"
+                  class="form-control"
+                  name="confirmPassword"
+                  placeholder="Re-enter password"
+                  required
                 />
-                </div>
+              </div>
 
-                <!-- Role / User Type -->
-                <div class="col-md-6">
+              <!-- Role / User Type -->
+              <div class="col-md-6">
                 <label class="form-label">User Role</label>
-                <select class="form-select" name="role" required>
-                    <option value="">Select role</option>
-                    <option value="User">Administrator</option>
-                    <option value="Manager">Viewer</option>
+                <select id="role" class="form-select" name="role" required>
+                  <option value="">Select role</option>
+                  <option value="Administrator">Administrator</option>
+                  <option value="Viewer">Viewer</option>
                 </select>
-                </div>
+              </div>
 
             </div>
 
             <!-- Actions -->
             <div class="d-flex justify-content-between align-items-center mt-4">
-                <!-- Reset Button -->
-                <button
+              <!-- Reset Button -->
+              <button
+                id="resetBtn"
                 type="button"
                 class="btn btn-outline-secondary"
                 onclick="resetRegisterForm()"
-                >
+              >
                 Reset
-                </button>
+              </button>
 
-                <!-- Register Button -->
-                <button
+              <!-- Register Button -->
+              <button
+                id="registerBtn"
                 type="submit"
                 class="btn btn-success"
-                ><i class="fas fa-user-check me-2"></i>
+              >
+                <i class="fas fa-user-check me-2"></i>
                 Register
-                </button>
+              </button>
             </div>
 
-            </form>
+          </form>
 
         </div>
-        </div>
+      </div>
 
     </div>
   </section>
   <!-- /User Registration Section -->
 
- <!-- Modal Confirmation -->
- <div class="modal fade" id="registerConfirmModal" tabindex="-1" aria-hidden="true">
+  <!-- Modal Confirmation -->
+  <div class="modal fade" id="registerConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+      <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title">Confirm Registration</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <h5 class="modal-title">Confirm Registration</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-            <p><strong>Full Name:</strong> <span id="confirmFullName"></span></p>
-            <p><strong>Email:</strong> <span id="confirmEmail"></span></p>
-            <p><strong>Phone:</strong> <span id="confirmPhone"></span></p>
-            <p><strong>Role:</strong> <span id="confirmRole"></span></p>
+          <p><strong>Username:</strong> <span id="confirmUsername"></span></p>
+          <p><strong>Full Name:</strong> <span id="confirmFullName"></span></p>
+          <p><strong>Phone:</strong> <span id="confirmPhone"></span></p>
+          <p><strong>Role:</strong> <span id="confirmRole"></span></p>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary" onclick="confirmRegistration()">Confirm</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button
+            id="confirmRegisterBtn"
+            type="submit"
+            class="btn btn-primary"
+            onclick="confirmRegistration()"
+          >
+            Confirm
+          </button>
         </div>
-        </div>
+      </div>
     </div>
- </div>
-
-
+  </div>
 
   <!-- Footer -->
   <footer class="app-footer">
