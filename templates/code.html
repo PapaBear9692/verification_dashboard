@@ -4,15 +4,31 @@
   <title>Product Verification</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/pharma.png') }}">
+
   <!-- Bootstrap 5.3.2 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+    crossorigin="anonymous"
+  >
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+
   <!-- Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+
   <!-- Font -->
-  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap"
+    rel="stylesheet"
+  >
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/code.css') }}">
 </head>
@@ -73,7 +89,6 @@
         <button class="btn btn-outline-danger ms-auto" onclick="logoutUser()">
           <i class="fas fa-sign-out-alt me-1"></i> Logout
         </button>
-
       </div>
 
     </div>
@@ -86,7 +101,7 @@
 
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">
-          <i class="fas fa-search me-1"></i>Search Code
+          <i class="fas fa-search me-1"></i> Search Code
         </h2>
       </div>
 
@@ -94,16 +109,17 @@
 
         <form id="searchCodeForm" class="row g-3 align-items-end">
 
-          <!-- Single Input Field -->
+          <!-- Input -->
           <div class="col-md-4">
-            <label class="form-label">Enter Code or Batch Number</label>
+            <label class="form-label" for="searchInput">Enter Code or Batch Number</label>
             <input
               type="text"
               class="form-control"
+              id="searchInput"
               name="searchInput"
               placeholder="Enter code or batch number"
               required
-            />
+            >
           </div>
 
           <!-- Radio Buttons -->
@@ -112,26 +128,26 @@
               <input class="form-check-input" type="radio" name="searchType" id="searchByCode" value="code" checked>
               <label class="form-check-label" for="searchByCode">Search by Code</label>
             </div>
+
             <div class="form-check">
               <input class="form-check-input" type="radio" name="searchType" id="searchByBatch" value="batch">
               <label class="form-check-label" for="searchByBatch">Search by Batch</label>
             </div>
           </div>
 
-          <!-- Action Buttons -->
+          <!-- Buttons -->
           <div class="col-md-4 d-flex justify-content-end gap-2 mt-3">
             <button type="button" class="btn btn-outline-secondary" onclick="resetSearchForm()">
               Reset
             </button>
             <button type="button" class="btn btn-primary" onclick="searchCodes()">
-              <i class="fas fa-search me-1"></i>
-              Search
+              <i class="fas fa-search me-1"></i> Search
             </button>
           </div>
 
         </form>
 
-        <!-- Search Results -->
+        <!-- Results -->
         <div class="mt-4" id="searchResults"></div>
 
       </div>
@@ -145,7 +161,7 @@
 
       <div class="section-header d-flex justify-content-between align-items-center mb-3">
         <h2 class="section-title mb-0">
-          <i class="fas fa-barcode me-1"></i>Generate Codes
+          <i class="fas fa-barcode me-1"></i> Generate Codes
         </h2>
       </div>
 
@@ -153,40 +169,28 @@
 
         <form id="generateCodeForm" class="row g-3 align-items-end">
 
-          <!-- Batch Number -->
-          <!-- <div class="col-md-6">
-            <label class="form-label">Batch Number</label>
-            <input
-              type="text"
-              class="form-control"
-              name="genBatchNumber"
-              placeholder="Enter batch number, e.g. BATCH-2026-001"
-              required
-            />
-          </div> -->
-
           <!-- Code Count -->
           <div class="col-md-6">
-            <label class="form-label">Number of Codes</label>
+            <label class="form-label" for="genCodeCount">Number of Codes</label>
             <input
               type="number"
               class="form-control"
+              id="genCodeCount"
               name="genCodeCount"
               placeholder="e.g. 1000"
               min="1"
               required
-            />
+            >
           </div>
 
-          <!-- Action Buttons -->
+          <!-- Buttons -->
           <div class="col-md-6 d-flex justify-content-end gap-2 mt-3">
             <button type="button" class="btn btn-outline-secondary" onclick="resetGenerateForm()">
               Reset
             </button>
 
             <button type="button" class="btn btn-primary" onclick="confirmGenerateCodes()">
-              <i class="fas fa-barcode me-1"></i>
-              Generate Codes
+              <i class="fas fa-barcode me-1"></i> Generate Codes
             </button>
           </div>
 
@@ -197,59 +201,77 @@
   </section>
   <!-- /Generate Codes Section -->
 
-  <!-- Code Summary Card -->
+  <!-- Code Summary -->
   <section class="section-block">
     <div class="container">
       <div class="section-header mb-3">
         <h2 class="section-title mb-0">
-          <i class="fas fa-list me-1"></i>Code Summary
+          <i class="fas fa-list me-1"></i> Code Summary
         </h2>
       </div>
-      <div class="row justify-content-center">
 
+      <div class="row justify-content-center">
         <div class="col-12 mb-4">
           <div class="report-card h-100">
             <div class="card-eyebrow mb-2">Code Summary</div>
+
             <div class="report-row">
               <span>Total Codes</span>
               <span class="report-value" id="totalCodes">—</span>
             </div>
+
             <div class="report-row">
               <span>Available</span>
               <span class="report-value text-success" id="availableCodes">—</span>
             </div>
+
             <div class="report-row">
               <span>Used</span>
               <span class="report-value text-danger" id="usedCodes">—</span>
             </div>
+
           </div>
         </div>
-
       </div>
+
     </div>
   </section>
-  <!-- /Code Summary Card -->
+  <!-- /Code Summary -->
 
   <!-- Footer -->
   <footer class="app-footer">
     <div class="container d-flex flex-wrap justify-content-between align-items-center">
-      <p class="mb-0">© 2026 <a href="https://www.squarepharma.com.bd" target="_blank" rel="noopener">Square Pharmaceuticals PLC.</a> All rights reserved.</p>
+      <p class="mb-0">
+        © 2026
+        <a href="https://www.squarepharma.com.bd" target="_blank" rel="noopener">
+          Square Pharmaceuticals PLC.
+        </a>
+        All rights reserved.
+      </p>
+
       <div class="footer-links">
         <a href="https://www.squarepharma.com.bd/about-us.php" target="_blank" rel="noopener">About</a>
         <a href="https://www.squarepharma.com.bd/contact-us.php" target="_blank" rel="noopener">Contact</a>
-        <a href="https://www.facebook.com/SquarePharmaLtd/" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
-        <a href="https://bd.linkedin.com/company/square-pharmaceuticals" target="_blank" rel="noopener"><i class="fab fa-linkedin-in"></i></a>
+        <a href="https://www.facebook.com/SquarePharmaLtd/" target="_blank" rel="noopener">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="https://bd.linkedin.com/company/square-pharmaceuticals" target="_blank" rel="noopener">
+          <i class="fab fa-linkedin-in"></i>
+        </a>
       </div>
     </div>
   </footer>
 
-  <!-- Scroll To Top Button -->
+  <!-- Back to Top -->
   <button id="backToTopBtn" class="back-to-top-btn" style="display:none" onclick="scrollToTop()">↑</button>
 
   <!-- JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-
-  <!-- Your existing JS -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+    crossorigin="anonymous">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
   <script src="{{ url_for('static', filename='js/code.js') }}"></script>
 
 </body>

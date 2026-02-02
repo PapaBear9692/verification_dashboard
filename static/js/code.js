@@ -37,6 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =====================
+     MODAL: Generate Codes Confirmation
+  ====================== */
+
+  const generateModal = createGenerateConfirmModal(); // { el, modal, open(payload), setLoading(bool), setError(msg), close() }
+
+  /* =====================
      EXPOSE GLOBAL FUNCTIONS
      (because HTML uses onclick/onload)
   ====================== */
@@ -49,9 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
     clearSearchResults();
     const payload = collectSearchPayload();
 
-    /* =====================
-       FRONTEND VALIDATION
-    ====================== */
     const error = validateSearch(payload);
     if (error) {
       renderSearchError(error);
@@ -64,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const response = await fetch("/codes/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -86,54 +89,19 @@ document.addEventListener("DOMContentLoaded", () => {
     clearSearchResults();
   };
 
-  window.confirmGenerateCodes = async function () {
+  // ✅ UPDATED: open modal instead of alert/confirm
+  window.confirmGenerateCodes = function () {
     const payload = collectGeneratePayload();
 
-    /* =====================
-       FRONTEND VALIDATION
-    ====================== */
     const error = validateGenerate(payload);
     if (error) {
-      alert(error);
+      // show the modal with the error + current payload preview
+      generateModal.open(payload);
+      generateModal.setError(error);
       return;
     }
 
-    const ok = window.confirm(`Generate ${payload.count} codes?`);
-    if (!ok) return;
-
-    // button loading state (best-effort: find the button by its label action)
-    const btn = generateForm.querySelector("button.btn.btn-primary");
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Generating...`;
-    }
-
-    try {
-      const response = await fetch("/codes/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        alert(data.message || "Code generation failed");
-        return;
-      }
-
-      // success
-      alert(data.message || "Codes generated successfully");
-      resetGenerateForm();
-      loadCodeSummary();
-    } catch (err) {
-      alert("Server unavailable. Please try again.");
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-barcode me-1"></i> Generate Codes`;
-      }
-    }
+    generateModal.open(payload);
   };
 
   window.resetGenerateForm = function () {
@@ -141,13 +109,12 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.logoutUser = async function () {
-    // Adjust endpoint if needed
     try {
       await fetch("/logout", { method: "POST" });
     } catch (_) {
-      // ignore network errors; still redirect
+      // ignore
     } finally {
-      window.location.href = "/login";
+      window.location.href = "{{ url_for('login_page') }}";
     }
   };
 
@@ -172,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return {
       searchType: type,
       query: searchInput.value.trim(),
-      timezone: getTimezone()
+      timezone: getTimezone(),
     };
   }
 
@@ -180,10 +147,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!p.query) return "Please enter a code or batch number.";
 
     if (p.searchType === "code") {
-      // codes often include letters/numbers; keep flexible but avoid very short
       if (p.query.length < 4) return "Code looks too short.";
     } else {
-      // batch may be like BATCH-2026-001 etc.
       if (p.query.length < 3) return "Batch number looks too short.";
     }
     return null;
@@ -192,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function collectGeneratePayload() {
     return {
       count: Number(codeCountInput.value),
-      timezone: getTimezone()
+      timezone: getTimezone(),
     };
   }
 
@@ -207,10 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("/codes/summary", { method: "GET" });
       const data = await response.json().catch(() => ({}));
-
       if (!response.ok) return;
 
-      // expected keys: total, available, used
       if (typeof data.total !== "undefined") totalCodesEl.textContent = data.total;
       if (typeof data.available !== "undefined") availableCodesEl.textContent = data.available;
       if (typeof data.used !== "undefined") usedCodesEl.textContent = data.used;
@@ -236,10 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderSearchResults(data, type) {
-    // You can shape your backend response however you want.
-    // This renderer supports:
-    // - data.results as array
-    // - each result can be {code, batch, status, created_at, used_at}
     const results = Array.isArray(data.results) ? data.results : [];
 
     if (results.length === 0) {
@@ -326,7 +285,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function setTimeZoneHiddenInput() {
     const tz = getTimezone();
 
-    // Attach timezone to BOTH forms
     [searchForm, generateForm].forEach((f) => {
       let tzInput = f.querySelector("input[name='timezone']");
       if (!tzInput) {
@@ -346,5 +304,189 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  /* =====================
+     MODAL IMPLEMENTATION
+  ====================== */
+
+  function createGenerateConfirmModal() {
+    // Inject modal HTML once
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <div class="modal fade" id="generateConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+
+            <div class="modal-header">
+              <h5 class="modal-title">
+                <i class="fas fa-barcode me-2"></i>Confirm Code Generation
+              </h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+              <div id="genModalError" class="alert alert-danger d-none mb-3">
+                <i class="fas fa-circle-exclamation me-1"></i>
+                <span id="genModalErrorText"></span>
+              </div>
+
+              <p class="mb-2">You are about to generate the following payload:</p>
+
+              <div class="border rounded p-3 bg-light">
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">Count</span>
+                  <span class="fw-semibold" id="genModalCount">—</span>
+                </div>
+              </div>
+
+              <div class="small text-muted mt-3">
+                Please verify the count before continuing. This action may take some time and cannot be undone.
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="genModalCancelBtn">
+                Cancel
+              </button>
+              <button type="button" class="btn btn-primary" id="genModalConfirmBtn">
+                <i class="fas fa-barcode me-1"></i>
+                Confirm Generate
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(wrapper);
+
+    const el = document.getElementById("generateConfirmModal");
+    const modal = new bootstrap.Modal(el, { backdrop: "static", keyboard: false });
+
+    const countEl = document.getElementById("genModalCount");
+
+    const errorBox = document.getElementById("genModalError");
+    const errorText = document.getElementById("genModalErrorText");
+
+    const confirmBtn = document.getElementById("genModalConfirmBtn");
+
+    let currentPayload = null;
+
+    // Confirm button handler
+    confirmBtn.addEventListener("click", async () => {
+      if (!currentPayload) return;
+
+      // revalidate in case the form changed
+      const err = validateGenerate(currentPayload);
+      if (err) {
+        setError(err);
+        return;
+      }
+
+      setError(""); // clear
+      setLoading(true);
+
+      // Also apply a loading state to the main page button (best-effort)
+      const mainBtn = generateForm.querySelector("button.btn.btn-primary");
+      const restoreMainBtn = setMainGenerateBtnLoading(mainBtn, true);
+
+      try {
+        const response = await fetch("/codes/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(currentPayload),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          setError(data.message || "Code generation failed");
+          return;
+        }
+
+        // success
+        modal.hide();
+        resetGenerateForm();
+        loadCodeSummary();
+        Toastify({
+          text: "Codes generated successfully",
+          duration: 3000,
+          gravity: "top",
+          position: "center",
+          style: {
+            background: "#02630c", // Green success
+          },
+        }).showToast();
+
+      } catch (err) {
+        setError("Server unavailable. Please try again.");
+      } finally {
+        setLoading(false);
+        restoreMainBtn();
+      }
+    });
+
+    // Clear errors when modal closes
+    el.addEventListener("hidden.bs.modal", () => {
+      setError("");
+      setLoading(false);
+      currentPayload = null;
+    });
+
+    function open(payload) {
+      currentPayload = payload;
+
+      // payload preview
+      countEl.textContent = String(payload?.count ?? "—");
+
+
+      // reset states
+      setError("");
+      setLoading(false);
+
+      modal.show();
+    }
+
+    function setLoading(isLoading) {
+      confirmBtn.disabled = !!isLoading;
+      confirmBtn.innerHTML = isLoading
+        ? `<i class="fas fa-spinner fa-spin me-1"></i> Generating...`
+        : `<i class="fas fa-barcode me-1"></i> Confirm Generate`;
+    }
+
+    function setError(message) {
+      if (!message) {
+        errorBox.classList.add("d-none");
+        errorText.textContent = "";
+        return;
+      }
+      errorBox.classList.remove("d-none");
+      errorText.textContent = message;
+    }
+
+    function close() {
+      modal.hide();
+    }
+
+    return { el, modal, open, setLoading, setError, close };
+  }
+
+  function setMainGenerateBtnLoading(btn, isLoading) {
+    if (!btn) return () => {};
+
+    const prevDisabled = btn.disabled;
+    const prevHtml = btn.innerHTML;
+
+    if (isLoading) {
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Generating...`;
+    }
+
+    return function restore() {
+      btn.disabled = prevDisabled;
+      btn.innerHTML = prevHtml;
+    };
   }
 });

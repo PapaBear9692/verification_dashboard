@@ -197,6 +197,25 @@ def export_batch():
 def code():
     return render_template('code.html')
 
+@app.route('/codes/generate', methods=['POST'])
+def generate_code():
+    if not session.get("login"):
+        return jsonify({
+            "message": "Unauthorized"
+        }), 401
+
+    data = request.get_json()
+    quantity = data.get("count")
+    if not quantity or quantity <= 0:
+        return jsonify({
+            "message": "Invalid code count"
+        }), 400
+    time.sleep(2)  # Simulate processing delay
+    lot_number = db.generate_codes(quantity)
+    return jsonify({
+        "message": f"Generated {quantity} codes in lot {lot_number}"
+    }), 200
+
 # -------------Logout--------------
 @app.route("/logout")
 def logout():

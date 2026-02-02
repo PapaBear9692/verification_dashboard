@@ -218,6 +218,26 @@ class ProductDB:
             cursor.close()
             conn.close()
 
+
+    def generate_codes(self,quantity):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Simulate code generation
+            generated_codes = [f"CODE-{i:06d}" for i in range(1, quantity + 1)]
+            return generated_codes
+
+        except Exception as e:
+            print("Code generation failed:", e)
+            return []
+
+        finally:
+            cursor.close()
+            conn.close()
+
+
+    
     # Call a stored procedure that returns multiple OUT parameters
     def get_authentication(self, input_str):
         conn = self._get_connection()
