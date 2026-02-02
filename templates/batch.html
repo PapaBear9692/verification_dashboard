@@ -15,6 +15,8 @@
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap" rel="stylesheet">
   <!-- Custom CSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/batch.css') }}">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 </head>
 
 <body onload="getTimeZone()">
@@ -162,10 +164,9 @@
                 <label class="form-label">Destination Market</label>
                 <select class="form-select" name="market" required>
                   <option value="">Select market</option>
-                  <option>Bangladesh</option>
-                  <option>Europe</option>
-                  <option>Middle East</option>
-                  <option>USA</option>
+                  <option value="Bangladesh">Bangladesh</option>
+                  <option value="China">China</option>
+                  <option value="Kenya">Kenya</option>
                 </select>
               </div>
 
@@ -186,6 +187,7 @@
             <div class="d-flex justify-content-between align-items-center mt-4">
               <!-- Reset Button (Left side) -->
               <button
+                id="resetBatchBtn"
                 type="button"
                 class="btn btn-outline-secondary"
                 onclick="resetCreateBatchForm()"
@@ -195,6 +197,7 @@
 
               <!-- Create Batch Button (Right side) -->
               <button
+                id="createBatchBtn"
                 type="button"
                 class="btn btn-primary"
                 onclick="openBatchConfirmation()"
@@ -234,7 +237,7 @@
                 type="text"
                 class="form-control"
                 name="exportBatch"
-                placeholder="Enter batch number, e.g. BATCH-2026-001"
+                placeholder="Enter batch number, e.g. 2026-001"
                 required
               />
             </div>
@@ -243,9 +246,9 @@
             <div class="col-md-4">
               <label class="form-label">Export Content</label>
               <select class="form-select" name="exportType" required>
-                <option value="summary">Summary only</option>
                 <option value="codes">Codes only</option>
                 <option value="both">Summary + Codes</option>
+                <option value="summary">Summary only</option>
               </select>
             </div>
 
@@ -262,7 +265,8 @@
 
           <!-- Actions -->
           <div class="d-flex justify-content-end mt-4 gap-2">
-            <button
+            <button 
+              id="resetExportBtn"
               type="button"
               class="btn btn-outline-secondary"
               onclick="resetExportForm()"
@@ -270,7 +274,8 @@
               Reset
             </button>
 
-            <button
+            <button 
+              id="exportBtn"
               type="button"
               class="btn btn-primary"
               onclick="exportBatchData()"

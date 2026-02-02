@@ -128,7 +128,69 @@ def get_dashboard_data():
 # -------------batch assign--------------
 @app.route('/batch', methods=['GET'])
 def batch():
+    if not session.get("login"):
+        return redirect(url_for("login_page"))
     return render_template('batch.html')
+
+
+@app.route('/batch', methods=['POST'])
+def assign_batch():
+    if not session.get("login"):
+        return jsonify({
+            "message": "Unauthorized"
+        }), 401
+
+    data = request.get_json()
+    batchNumber = data.get("batchNumber")
+    codeCount = data.get("codeCount")
+    product = data.get("product")
+    productionDate = data.get("productionDate")
+    factory = data.get("factory")
+    market = data.get("market")
+    notes = data.get("notes")
+
+    if not all([batchNumber, codeCount, product, productionDate, factory, market]):
+        return jsonify({
+            "message": "All fields are required"
+        }), 400
+    
+    
+    # Here you would typically process the batch assignment
+    time.sleep(2)  # Simulate processing delay
+    lotNumber = db.assign_batch(batchNumber, codeCount, product, productionDate, factory, market, notes)
+    return jsonify({
+        "message": f"Batch {batchNumber} assigned to {market} with lot number {lotNumber}"
+    }), 200
+
+
+@app.route('/batch/export', methods=['POST'])
+def export_batch():
+    if not session.get("login"):
+        return jsonify({
+            "message": "Unauthorized"
+        }), 401
+
+    data = request.get_json()
+    batchNumber= data.get("batchNumber")
+    exportType= data.get("exportType")
+    exportFormat= data.get("exportFormat")
+    timezone= data.get("timezone")
+    if not all([batchNumber, exportType, exportFormat, timezone]):
+        return jsonify({
+            "message": "All fields are required"
+        }), 400
+    
+    if exportType == "summary":
+        filename = db.export_batch_summary(batchNumber)
+    elif exportType == "codes":
+        filename = db.export_batch_codes(batchNumber)
+    else:  # both
+        filename = db.export_batch_full(batchNumber)
+
+    return jsonify({
+        "filename": filename
+    }), 200
+
 
 # -------------code generation--------------
 @app.route('/code', methods=['GET'])

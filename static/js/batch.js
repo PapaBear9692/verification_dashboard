@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const response = await fetch("/batch/create", {
+      const response = await fetch("/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(pendingBatchPayload)
@@ -117,10 +117,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      alert(data.message || "Batch created successfully");
       modal.hide();
       createForm.reset();
       pendingBatchPayload = null;
+      Toastify({
+        text: data.message || "Batch created successfully",
+        duration: 3000, // Disappears after 3 seconds
+        gravity: "top", // `top` or `bottom`
+        position: "center", // `left`, `center` or `right`
+        style: {
+          background: " #02630c", // Green success color
+        },
+      }).showToast();
+
     } catch (err) {
       alert("Server unavailable. Please try again.");
     } finally {
@@ -148,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // best-effort: locate export button
-    const exportBtn = exportForm.querySelector(".btn.btn-primary");
+    const exportBtn = document.getElementById("exportBtn");
     if (exportBtn) {
       exportBtn.disabled = true;
       exportBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Exporting...`;
@@ -232,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const prod = new Date(p.productionDate);
     if (String(prod) !== "Invalid Date") {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setHours(23, 59, 59, 59);
       if (prod > today) {
         return "Production date cannot be in the future.";
       }
