@@ -24,12 +24,13 @@ def login():
     username = data.get("username")
     password = data.get("password")
 
-    authenticated_id = db.authenticate(username, password)
-    time.sleep(3)  # Simulate processing delay
-    if authenticated_id:
+    result = db.login(username, password)
+    if result["status_code"] == 1:
         session["login"] = True
-        session["user_id"] = authenticated_id
+        session["user_id"] = result["user_id"]
         session["username"] = username
+        session["full_name"] = result["full_name"]
+        session["role"] = result["role"]
 
         return jsonify({
             "redirect": url_for("dashboard")
@@ -68,9 +69,8 @@ def register_user():
             "message": "User already exists"
         }), 409
     
-    user_id = db.create_user(username, full_name, employee_id, phone, role, password)
-    time.sleep(3)  # Simulate processing delay
-    if user_id:
+    result = db.register_user(username, full_name, employee_id, phone, role, password)
+    if  result.get("user_id") is not None:
         return jsonify({
             "redirect": url_for("login_page")
         })

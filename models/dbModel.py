@@ -89,20 +89,43 @@ class ProductDB:
         return data
 
 
-    def authenticate(self, username, password):
+    def login(self, username, password):
         conn = self._get_connection()
         cursor = conn.cursor()
 
         try:
-            if username == "admin" and password == "admin123":
-                return 25
-            else:
-                return None
+            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_full_name = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            o_role = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            o_emp_id = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
 
+            cursor.callproc(
+                "verify_user_login_prc",
+                [
+                    username,
+                    password,
+                    o_user_id,
+                    o_full_name,
+                    o_role,
+                    o_emp_id,
+                    o_status_code,
+                    o_status_msg
+                ]
+            )
+            result = {
+                "user_id": o_user_id.getvalue(),
+                "full_name": o_full_name.getvalue(),
+                "role": o_role.getvalue(),
+                "status_code": o_status_code.getvalue(), # 1 for success, 0 for failure
+            }
+            return result
+        
         except Exception as e:
             print("Authentication failed:", e)
-            return None
-
+            return {"status_code": -1, "error": str(e)}
+        
         finally:
             cursor.close()
             conn.close()
@@ -123,17 +146,47 @@ class ProductDB:
             cursor.close()
             conn.close()
     
-    def create_user(self, username, full_name, employee_id, phone, role, password):
+    def register_user(self, username, full_name, employee_id, phone, role, password):
         conn = self._get_connection()
         cursor = conn.cursor()
 
+    #     verify_user_reg_prc (
+    #     p_username     IN VARCHAR2,
+    #     p_emp_id       IN VARCHAR2,
+    #     p_email        IN VARCHAR2,
+    #     p_password     IN VARCHAR2,
+    #     p_full_name    IN VARCHAR2,
+    #     p_phone_no     IN VARCHAR2,
+    #     p_role         IN VARCHAR2,
+    #     p_created_by   IN VARCHAR2,
+    #     o_user_id      out  number,
+    #     o_status_msg   OUT VARCHAR2  
+    # ) 
         try:
-            return 1
+            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
 
+            cursor.callproc(
+                "verify_user_reg_prc",
+                [
+                    username,
+                    employee_id,
+                    " ",  # email placeholder
+                    password,
+                    full_name,
+                    phone,
+                    role,
+                    "SELF",  # created_by placeholder
+                    o_user_id,
+                    o_status_msg
+                ]
+            )
+            result = {'user_id': o_user_id.getvalue()}
+            return result
+                
         except Exception as e:
-            print("User creation failed:", e)
-            return None
-
+            print("User registration failed:", e)
+            return {'user_id': None}
         finally:
             cursor.close()
             conn.close()
