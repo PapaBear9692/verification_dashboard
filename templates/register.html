@@ -66,11 +66,12 @@
                 <label class="form-label">Employee ID</label>
                 <input
                   id="employeeID"
-                  type="number"
+                  type="text"
+                  inputmode="numeric"
                   class="form-control"
                   name="employeeID"
-                  placeholder="e.g. 000001667"
-                  maxlength="8"
+                  placeholder="e.g. 0000001667"
+                  maxlength="10"
                   required
                 />
               </div>
@@ -127,12 +128,25 @@
                 />
               </div>
 
+              <!-- Phone Number -->
+              <div class="col-md-6">
+                <label class="form-label">Email Address</label>
+                <input
+                  id="email"
+                  type="email"
+                  class="form-control"
+                  name="email"
+                  placeholder="e.g. john.doe@squaregroup.com"
+                  required
+                />
+              </div>
+
               <!-- Role / User Type -->
               <div class="col-md-6">
                 <label class="form-label">User Role</label>
                 <select id="role" class="form-select" name="role" required>
                   <option value="">Select role</option>
-                  <option value="Administrator">Administrator</option>
+                  <option value="Admin">Administrator</option>
                   <option value="Viewer">Viewer</option>
                 </select>
               </div>

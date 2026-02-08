@@ -51,13 +51,16 @@ def register():
 @app.route("/register", methods=["POST"])
 def register_user():
     data = request.get_json()
-    username = data.get("username")
-    employee_id = data.get("employeeId")
-    full_name = data.get("fullName")
-    phone = data.get("phone")
-    password = data.get("password")
-    confirm_password = data.get("confirmPassword")
-    role = data.get("role")
+    username = str(data.get("username")).strip()
+    employee_id = str(data.get("employeeId")).strip()
+    full_name = str(data.get("fullName")).strip()
+    phone = str(data.get("phone")).strip()
+    password = str(data.get("password")).strip()
+    confirm_password = str(data.get("confirmPassword")).strip()
+    role = str(data.get("role")).strip()
+    email = str(data.get("email")).strip()
+
+    print(f"Received registration data: {data}")  # Debug log
 
     if password != confirm_password:
         return jsonify({
@@ -69,7 +72,8 @@ def register_user():
             "message": "User already exists"
         }), 409
     
-    result = db.register_user(username, full_name, employee_id, phone, role, password)
+    result = db.register_user(username, full_name, employee_id, phone, role, password, email)
+    
     if  result.get("user_id") is not None:
         return jsonify({
             "redirect": url_for("login_page")
@@ -226,4 +230,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5500)
+    app.run(debug=True, port=5000)

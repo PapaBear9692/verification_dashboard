@@ -146,7 +146,7 @@ class ProductDB:
             cursor.close()
             conn.close()
     
-    def register_user(self, username, full_name, employee_id, phone, role, password):
+    def register_user(self, username, full_name, employee_id, phone, role, password, email):
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -165,23 +165,25 @@ class ProductDB:
         try:
             o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            created_by = "SELF"
 
             cursor.callproc(
                 "verify_user_reg_prc",
                 [
-                    username,
-                    employee_id,
-                    " ",  # email placeholder
-                    password,
-                    full_name,
-                    phone,
-                    role,
-                    "SELF",  # created_by placeholder
+                    str(username),
+                    str(employee_id),
+                    str(email),
+                    str(password),
+                    str(full_name),
+                    str(phone),
+                    str(role),
+                    str(created_by),
                     o_user_id,
                     o_status_msg
                 ]
             )
             result = {'user_id': o_user_id.getvalue()}
+            print("Status:", o_status_msg.getvalue())
             return result
                 
         except Exception as e:
@@ -346,6 +348,41 @@ class ProductDB:
             print("Database function call failed:", e)
             return {"status": "E", "msg": str(e)}
 
+        finally:
+            cursor.close()
+            conn.close()
+
+    def register_test(self):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+
+            cursor.callproc(
+                "verify_user_reg_prc",
+                [
+                    "username",
+                    "1234567891",
+                    "user@squaregroup.com",  # email placeholder
+                    "password",
+                    "full_name",
+                    "12345678911",
+                    "user",
+                    "SELF",  # created_by placeholder
+                    o_user_id,
+                    o_status_msg
+                ]
+            )
+            result = {'user_id': o_user_id.getvalue(),
+                      'status_msg': o_status_msg.getvalue()}
+            print("Status:", result['status_msg'])
+            return result
+                
+        except Exception as e:
+            print("User registration failed:", e)
+            return {'user_id': None}
         finally:
             cursor.close()
             conn.close()

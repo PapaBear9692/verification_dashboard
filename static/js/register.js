@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("password");
   const confirmPasswordInput = document.getElementById("confirmPassword");
   const roleSelect = document.getElementById("role");
-
+  const email = document.getElementById("email");
   const registerBtn = document.getElementById("registerBtn");
   const confirmBtn = document.getElementById("confirmRegisterBtn");
 
@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmUsername = document.getElementById("confirmUsername"); // your modal label says Email, but we will show Username
   const confirmPhone = document.getElementById("confirmPhone");
   const confirmRole = document.getElementById("confirmRole");
+  const confirmEmail = document.getElementById("confirmEmail");
 
   // keep data until user clicks Confirm
   let pendingPayload = null;
@@ -42,7 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ====================== */
     const error = validate(payload);
     if (error) {
-      alert(error);
       return;
     }
 
@@ -151,35 +151,47 @@ document.addEventListener("DOMContentLoaded", () => {
       password: passwordInput.value,
       confirmPassword: confirmPasswordInput.value,
       role: roleSelect.value,
+      email: email.value.trim(),
       timezone: getTimezone()
     };
   }
 
   function validate(p) {
     if (!p.username || !p.employeeID || !p.fullName || !p.password || !p.confirmPassword || !p.role) {
-      return "All required fields must be filled";
+      alert("All required fields must be filled");
+      return null;
     }
 
     if (p.username.length < 3) {
-      return "Username must be at least 3 characters";
+      alert("Username must be at least 3 characters");
+      return null;  
     }
 
     // Employee ID digits only (if you want EXACTLY 8 digits, change to /^\d{8}$/)
-    if (!/^\d{6,12}$/.test(p.employeeID)) {
-      return "Employee ID must be digits only (6–12 digits)";
+    if (!/^\d{10,10}$/.test(p.employeeID)) {
+      alert("Employee ID must be exactly 10 digits (e.g., 0000001667)");
+      return null;
     }
 
     // Phone optional, but if present must be BD format 01XXXXXXXXX
     if (p.phone && !/^01\d{9}$/.test(p.phone)) {
-      return "Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)";
+      alert("Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)");
+      return null;
+    }
+
+    if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
+      alert("Email format is invalid");
+      return null;
     }
 
     if (p.password.length < 8 || p.password.length > 16) {
-      return "Password must be 8–16 characters long";
+      alert("Password must be 8–16 characters long");
+      return null;
     }
 
     if (p.password !== p.confirmPassword) {
-      return "Passwords do not match";
+      alert("Passwords do not match");
+      return null;
     }
 
     return null;
