@@ -91,22 +91,18 @@ def reset():
 @app.route("/reset", methods=["POST"])
 def reset_password():
     data = request.get_json()
-    username = data.get("username")
-    new_password = data.get("new_password")
-    confirm_password = data.get("confirm_password")
-
+    username = str(data.get("username")).strip()
+    new_password = str(data.get("new_password")).strip()
+    confirm_password = str(data.get("confirm_password")).strip()
+    
     if new_password != confirm_password:
+        print(f"Password mismatch: new_password='{new_password}' confirm_password='{confirm_password}'")  # Debug log
         return jsonify({
             "message": "Passwords do not match"
         }), 400
-
-    time.sleep(3)  # Simulate processing delay
-    if not db.user_exists(username):
-        return jsonify({
-            "message": "User does not exist"
-        }), 404
+    print(f"Attempting password reset for username: {username}")  # Debug log
     
-    reset_success = db.reset_password(username, new_password)
+    reset_success = db.reset_password(username, new_password, confirm_password)
     if reset_success:
         return jsonify({
             "redirect": url_for("login_page")

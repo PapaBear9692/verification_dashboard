@@ -193,13 +193,40 @@ class ProductDB:
             cursor.close()
             conn.close()
 
-    def reset_password(self, username, new_password):
+    def reset_password(self, username, new_password, confirm_password):
         conn = self._get_connection()
         cursor = conn.cursor()
-
+        print(f"executing procedure")  # Debug log
+        #     p_username         IN  VARCHAR2,
+        #     p_new_password     IN  VARCHAR2,
+        #     p_retype_password  IN  VARCHAR2,
+        #     o_user_id          OUT NUMBER,  
+        #     o_status_code      OUT NUMBER,  
+        #     o_status_msg       OUT VARCHAR2
         try:
-            return True
+            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
 
+            cursor.callproc(
+                "verify_user_forgot_pwd_prc",
+                [
+                    username,
+                    new_password,
+                    confirm_password,
+                    o_user_id,
+                    o_status_code,
+                    o_status_msg
+                ]
+            )
+            status_code = o_status_code.getvalue()
+            print("Status:", o_status_msg.getvalue())
+            if status_code == 1:
+                print("Password reset successful")
+                return True
+            else:
+                print("Password reset failed:", o_status_msg.getvalue())
+                return False
         except Exception as e:
             print("Password reset failed:", e)
             return False
