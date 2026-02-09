@@ -2,6 +2,7 @@ import oracledb
 from dotenv import load_dotenv
 import os
 import platform
+from flask import session
 
 load_dotenv()  # Load environment variables from .env file
         
@@ -36,7 +37,7 @@ class ProductDB:
 
     def get_dashboard_stats(self):
         data = {
-            "user_name": "Admin",  # You can pull this from session['user']
+            "user_name": session['full_name'],
             
             # Operational Health
             "system_health": "Healthy",
@@ -131,37 +132,11 @@ class ProductDB:
             conn.close()
     
 
-    def user_exists(self, employee_id):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        try:
-            return False
-
-        except Exception as e:
-            print("User existence check failed:", e)
-            return False
-
-        finally:
-            cursor.close()
-            conn.close()
-    
+      
     def register_user(self, username, full_name, employee_id, phone, role, password, email):
         conn = self._get_connection()
         cursor = conn.cursor()
 
-    #     verify_user_reg_prc (
-    #     p_username     IN VARCHAR2,
-    #     p_emp_id       IN VARCHAR2,
-    #     p_email        IN VARCHAR2,
-    #     p_password     IN VARCHAR2,
-    #     p_full_name    IN VARCHAR2,
-    #     p_phone_no     IN VARCHAR2,
-    #     p_role         IN VARCHAR2,
-    #     p_created_by   IN VARCHAR2,
-    #     o_user_id      out  number,
-    #     o_status_msg   OUT VARCHAR2  
-    # ) 
         try:
             o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
@@ -193,16 +168,11 @@ class ProductDB:
             cursor.close()
             conn.close()
 
+
     def reset_password(self, username, new_password, confirm_password):
         conn = self._get_connection()
         cursor = conn.cursor()
-        print(f"executing procedure")  # Debug log
-        #     p_username         IN  VARCHAR2,
-        #     p_new_password     IN  VARCHAR2,
-        #     p_retype_password  IN  VARCHAR2,
-        #     o_user_id          OUT NUMBER,  
-        #     o_status_code      OUT NUMBER,  
-        #     o_status_msg       OUT VARCHAR2
+        
         try:
             o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
@@ -220,21 +190,22 @@ class ProductDB:
                 ]
             )
             status_code = o_status_code.getvalue()
-            print("Status:", o_status_msg.getvalue())
+            
             if status_code == 1:
                 print("Password reset successful")
-                return True
+                return True, o_status_msg.getvalue()
             else:
                 print("Password reset failed:", o_status_msg.getvalue())
-                return False
+                return False, o_status_msg.getvalue()
+            
         except Exception as e:
             print("Password reset failed:", e)
-            return False
-
+            return False, "An error occurred while resetting the password."
         finally:
             cursor.close()
             conn.close()
     
+
     def assign_batch(self, batchNumber, codeCount, product, productionDate, factory, market, notes):
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -245,7 +216,6 @@ class ProductDB:
         except Exception as e:
             print("Batch assignment failed:", e)
             return -1
-
         finally:
             cursor.close()
             conn.close()
@@ -263,10 +233,10 @@ class ProductDB:
         except Exception as e:
             print("Batch code export failed:", e)
             return []
-
         finally:
             cursor.close()
             conn.close()
+
 
     def export_batch_summary(self, batchNumber):
         conn = self._get_connection()
@@ -284,6 +254,7 @@ class ProductDB:
             cursor.close()
             conn.close()
 
+
     def export_batch_full(self, batchNumber):
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -295,7 +266,6 @@ class ProductDB:
         except Exception as e:
             print("Batch full export failed:", e)
             return None
-
         finally:
             cursor.close()
             conn.close()
@@ -313,103 +283,8 @@ class ProductDB:
         except Exception as e:
             print("Code generation failed:", e)
             return []
-
         finally:
             cursor.close()
             conn.close()
 
 
-    
-    # Call a stored procedure that returns multiple OUT parameters
-    def get_authentication(self, input_str):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        try:
-            # Prepare OUT parameters
-            p_status = cursor.var(oracledb.DB_TYPE_NUMBER)
-            p_batch_no = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_prod_code = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_prod_name = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_mnf_dt = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_exp_dt = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_mnf_name = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_noc = cursor.var(oracledb.DB_TYPE_NUMBER)
-            p_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            p_remark = cursor.var(oracledb.DB_TYPE_VARCHAR)
-
-            # Call the stored procedure
-            cursor.callproc(
-                "PR_VERIFY_AND_MARK_SCRATCH",  # procedure name in your Oracle DB
-                [
-                    input_str,
-                    p_status,
-                    p_batch_no,
-                    p_prod_code,
-                    p_prod_name,
-                    p_mnf_dt,
-                    p_exp_dt,
-                    p_mnf_name,
-                    p_noc,
-                    p_msg,
-                    p_remark
-                ]
-            )
-
-            result = {
-                "status": p_status.getvalue(),
-                "batch_no": p_batch_no.getvalue(),
-                "prod_code": p_prod_code.getvalue(),
-                "prod_name": p_prod_name.getvalue(),
-                "mnf_date": p_mnf_dt.getvalue(),
-                "exp_date": p_exp_dt.getvalue(),
-                "mnf_name": p_mnf_name.getvalue(),
-                "noc": int(p_noc.getvalue()) if p_noc.getvalue() is not None else None,
-                "msg": p_msg.getvalue(),
-                "remark": p_remark.getvalue()
-            }
-
-            return result
-
-        except Exception as e:
-            print("Database function call failed:", e)
-            return {"status": "E", "msg": str(e)}
-
-        finally:
-            cursor.close()
-            conn.close()
-
-    def register_test(self):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        try:
-            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
-            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
-
-            cursor.callproc(
-                "verify_user_reg_prc",
-                [
-                    "username",
-                    "1234567891",
-                    "user@squaregroup.com",  # email placeholder
-                    "password",
-                    "full_name",
-                    "12345678911",
-                    "user",
-                    "SELF",  # created_by placeholder
-                    o_user_id,
-                    o_status_msg
-                ]
-            )
-            result = {'user_id': o_user_id.getvalue(),
-                      'status_msg': o_status_msg.getvalue()}
-            print("Status:", result['status_msg'])
-            return result
-                
-        except Exception as e:
-            print("User registration failed:", e)
-            return {'user_id': None}
-        finally:
-            cursor.close()
-            conn.close()

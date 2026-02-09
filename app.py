@@ -67,11 +67,6 @@ def register_user():
             "message": "Passwords do not match"
         }), 400
     
-    if db.user_exists(employee_id):
-        return jsonify({
-            "message": "User already exists"
-        }), 409
-    
     result = db.register_user(username, full_name, employee_id, phone, role, password, email)
     
     if  result.get("user_id") is not None:
@@ -102,14 +97,14 @@ def reset_password():
         }), 400
     print(f"Attempting password reset for username: {username}")  # Debug log
     
-    reset_success = db.reset_password(username, new_password, confirm_password)
+    reset_success, status_msg = db.reset_password(username, new_password, confirm_password)
     if reset_success:
         return jsonify({
-            "redirect": url_for("login_page")
+            "message": status_msg
         })
     else:
         return jsonify({
-            "message": "Failed to reset password"
+            "message": status_msg or "Failed to reset password"
         }), 500
 
 # -------------Dashboard--------------

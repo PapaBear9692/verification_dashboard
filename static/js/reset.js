@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("resetForm");
 
   const usernameInput = document.getElementById("username");
-  const employeeIdInput = document.getElementById("employeeId");
+  //const employeeIdInput = document.getElementById("employeeId");
   const newPasswordInput = document.getElementById("newPassword");
   const confirmNewPasswordInput = document.getElementById("confirmNewPassword");
 
@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   form.prepend(errorBox);
 
   // Live validation (enable button only when valid)
-  [usernameInput, employeeIdInput, newPasswordInput, confirmNewPasswordInput].forEach((el) => {
+  [usernameInput, newPasswordInput, confirmNewPasswordInput].forEach((el) => {
     el.addEventListener("input", validateLive);
   });
 
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
     hideError();
 
     const username = usernameInput.value.trim();
-    const employeeId = employeeIdInput.value.trim();
+    //const employeeId = employeeIdInput.value.trim();
     const newPassword = newPasswordInput.value;
     const confirmNewPassword = confirmNewPasswordInput.value;
 
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
        FRONTEND VALIDATION
     ====================== */
 
-    const error = validate({ username, employeeId, newPassword, confirmNewPassword });
+    const error = validate({ username, newPassword, confirmNewPassword });
     if (error) {
       showError(error);
       return;
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         body: JSON.stringify({
           username: username,
-          employee_id: employeeId,
+          //employee_id: employeeId,
           new_password: newPassword,
           confirm_password: confirmNewPassword
         })
@@ -77,10 +77,13 @@ document.addEventListener("DOMContentLoaded", () => {
       // success UI
       form.classList.add("d-none");
       approvalBox.classList.remove("d-none");
+      const responseMsg = document.getElementById("responseMsg");
+      responseMsg.textContent =
+        data.message || "Wait for approval from the admin.";
 
       // clear fields
       usernameInput.value = "";
-      employeeIdInput.value = "";
+      //employeeIdInput.value = "";
       newPasswordInput.value = "";
       confirmNewPasswordInput.value = "";
     } catch (err) {
@@ -97,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function validateLive() {
     const username = usernameInput.value.trim();
-    const employeeId = employeeIdInput.value.trim();
+    //const employeeId = employeeIdInput.value.trim();
     const newPassword = newPasswordInput.value;
     const confirmNewPassword = confirmNewPasswordInput.value;
 
@@ -108,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // enable submit only if minimum validity is met
     const canSubmit =
       username.length >= 3 &&
-      employeeId.length >= 3 &&
+      //employeeId.length >= 3 &&
       newPassword.length >= 8 &&
       newPassword.length <= 16 &&
       confirmNewPassword.length >= 8 &&
@@ -118,8 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.disabled = !canSubmit;
   }
 
-  function validate({ username, employeeId, newPassword, confirmNewPassword }) {
-    if (!username || !employeeId || !newPassword || !confirmNewPassword) {
+  function validate({ username, newPassword, confirmNewPassword }) {
+    if (!username || !newPassword || !confirmNewPassword) {
       return "All fields are required";
     }
 
@@ -130,9 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // If your employee IDs are numeric-only, uncomment this:
     // if (!/^\d+$/.test(employeeId)) return "Employee ID must be numeric";
 
-    if (employeeId.length < 3) {
-      return "Employee ID is too short";
-    }
+    // if (employeeId.length < 3) {
+    //   return "Employee ID is too short";
+    // }
 
     if (newPassword.length < 8 || newPassword.length > 16) {
       return "Password must be 8–16 characters long";
