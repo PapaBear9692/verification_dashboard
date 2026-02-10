@@ -276,10 +276,19 @@ class ProductDB:
         cursor = conn.cursor()
 
         try:
-            # Simulate code generation
-            generated_codes = [f"CODE-{i:06d}" for i in range(1, quantity + 1)]
-            return generated_codes
-
+            p_batch = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            o_count = cursor.var(oracledb.DB_TYPE_NUMBER)
+            cursor.callproc(
+                "GEN_SCRATCH_CODE",
+                [   
+                    p_batch,
+                    session['user_id'],
+                    quantity,
+                    o_count
+                ]
+            )
+            success_count = o_count.getvalue()
+            return success_count
         except Exception as e:
             print("Code generation failed:", e)
             return []

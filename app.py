@@ -188,11 +188,11 @@ def export_batch():
 
 
 # -------------code generation--------------
-@app.route('/code', methods=['GET'])
+@app.route('/generate', methods=['GET'])
 def code():
     return render_template('code.html')
 
-@app.route('/codes/generate', methods=['POST'])
+@app.route('/generate/code', methods=['POST'])
 def generate_code():
     if not session.get("login"):
         return jsonify({
@@ -206,9 +206,9 @@ def generate_code():
             "message": "Invalid code count"
         }), 400
     time.sleep(2)  # Simulate processing delay
-    lot_number = db.generate_codes(quantity)
+    success_count = db.generate_codes(quantity)
     return jsonify({
-        "message": f"Generated {quantity} codes in lot {lot_number}"
+        "message": f"Generated {success_count} codes"
     }), 200
 
 # -------------Logout--------------
