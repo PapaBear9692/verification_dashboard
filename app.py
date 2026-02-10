@@ -196,7 +196,8 @@ def code():
 def generate_code():
     if not session.get("login"):
         return jsonify({
-            "message": "Unauthorized"
+            "message": "Unauthorized",
+            "redirect": url_for("login_page")
         }), 401
 
     data = request.get_json()

@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSearchLoading();
 
     try {
-      const response = await fetch("/codes/search", {
+      const response = await fetch("/generate/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadCodeSummary() {
     try {
-      const response = await fetch("/codes/summary", { method: "GET" });
+      const response = await fetch("/generate/summary", { method: "GET" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) return;
 
@@ -393,7 +393,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const restoreMainBtn = setMainGenerateBtnLoading(mainBtn, true);
 
       try {
-        const response = await fetch("/codes/generate", {
+        const response = await fetch("/generate/code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(currentPayload),
@@ -403,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!response.ok) {
           setError(data.message || "Code generation failed");
+          window.location.href= data.redirect || "";
           return;
         }
 
