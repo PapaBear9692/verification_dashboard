@@ -99,21 +99,56 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =====================
      OPTIONAL: LIVE CHECK (PASSWORD MATCH)
   ====================== */
-  confirmPasswordInput.addEventListener("input", () => {
-    if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-      confirmPasswordInput.setCustomValidity("Passwords do not match");
-    } else {
-      confirmPasswordInput.setCustomValidity("");
-    }
-  });
+  // confirmPasswordInput.addEventListener("input", () => {
+  //   if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+  //     confirmPasswordInput.setCustomValidity("Passwords do not match");
+  //   } else {
+  //     confirmPasswordInput.setCustomValidity("");
+  //   }
+  // });
 
-  passwordInput.addEventListener("input", () => {
-    if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-      confirmPasswordInput.setCustomValidity("Passwords do not match");
-    } else {
-      confirmPasswordInput.setCustomValidity("");
+  // passwordInput.addEventListener("input", () => {
+  //   if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+  //     confirmPasswordInput.setCustomValidity("Passwords do not match");
+  //   } else {
+  //     confirmPasswordInput.setCustomValidity("");
+  //   }
+  // });
+
+  /* =====================
+    REAL-TIME PASSWORD MATCH INDICATOR
+  ====================== */
+
+  registerBtn.disabled = true; // Disable initially
+
+  function checkPasswordMatch() {
+    const password = passwordInput.value;
+    const confirm = confirmPasswordInput.value;
+    const errorSpan = document.getElementById("confirmPasswordError");
+
+    // If confirm field is empty → no message
+    if (!confirm) {
+      errorSpan.textContent = "";
+      registerBtn.disabled = true;
+      return;
     }
-  });
+
+    if (password === confirm) {
+      errorSpan.textContent = "Passwords match ✔";
+      errorSpan.classList.remove("text-danger");
+      errorSpan.classList.add("text-success");
+      registerBtn.disabled = false;
+    } else {
+      errorSpan.textContent = "Passwords do not match";
+      errorSpan.classList.remove("text-success");
+      errorSpan.classList.add("text-danger");
+      registerBtn.disabled = true;
+    }
+  }
+
+  // Listen to both fields
+  passwordInput.addEventListener("input", checkPasswordMatch);
+  confirmPasswordInput.addEventListener("input", checkPasswordMatch);
 
   /* =====================
      EXPOSE GLOBAL FUNCTIONS
