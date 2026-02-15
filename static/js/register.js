@@ -156,45 +156,53 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  function showErrorMessage(inputId, message) {
+  const errorElement = document.getElementById(inputId + 'Error');
+  errorElement.textContent = message;
+  }
+
   function validate(p) {
+    let hasError = false; // Flag to check if any errors exist
+
+    // Clear previous errors
+    document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+
     if (!p.username || !p.employeeID || !p.fullName || !p.password || !p.confirmPassword || !p.role) {
-      alert("All required fields must be filled");
-      return null;
+      showErrorMessage('username', 'All required fields must be filled');
+      hasError = true;
     }
 
     if (p.username.length < 3) {
-      alert("Username must be at least 3 characters");
-      return null;  
+      showErrorMessage('username', 'Username must be at least 3 characters');
+      hasError = true;
     }
 
-    // Employee ID digits only (if you want EXACTLY 8 digits, change to /^\d{8}$/)
     if (!/^\d{10,10}$/.test(p.employeeID)) {
-      alert("Employee ID must be exactly 10 digits (e.g., 0000001667)");
-      return null;
+      showErrorMessage('employeeID', 'Employee ID must be exactly 10 digits (e.g., 0000001667)');
+      hasError = true;
     }
 
-    // Phone optional, but if present must be BD format 01XXXXXXXXX
     if (p.phone && !/^01\d{9}$/.test(p.phone)) {
-      alert("Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)");
-      return null;
+      showErrorMessage('phone', 'Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)');
+      hasError = true;
     }
 
     if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
-      alert("Email format is invalid");
-      return null;
+      showErrorMessage('email', 'Email format is invalid');
+      hasError = true;
     }
 
     if (p.password.length < 8 || p.password.length > 16) {
-      alert("Password must be 8–16 characters long");
-      return null;
+      showErrorMessage('password', 'Password must be 8–16 characters long');
+      hasError = true;
     }
 
     if (p.password !== p.confirmPassword) {
-      alert("Passwords do not match");
-      return null;
+      showErrorMessage('confirmPassword', 'Passwords do not match');
+      hasError = true;
     }
 
-    return null;
+    return hasError ? "Please correct the errors above." : null; // Return a message if any error exists
   }
 
   function fillConfirmModal(p) {
