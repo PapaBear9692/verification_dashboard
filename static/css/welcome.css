@@ -276,8 +276,8 @@ img {
 
 /* Header */
 .app-header {
-  background: #fff;
-  border-bottom: 1px solid rgba(0,0,0,0.03);
+  background: #ffffff;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
   height: 70px;
   display: flex;
   align-items: center;
@@ -295,15 +295,14 @@ img {
   text-decoration: none; /* Remove underline on hover */
 }
 
-.brand-logo {
-  height: 85px;
-  width: auto;
-  margin-right: 50px;
-}
+.brand-logo { height: 70px; width: auto; }
+.second-logo { height: 52px; width: auto; }
 
-.second-logo {
-  height: 70px; /* Adjust based on your logo size */
-  width: auto;
+.app-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
 }
 /* 
 .brand-text {
@@ -336,9 +335,9 @@ img {
   padding: 3.5rem 0 3rem;
 }
 
-.hero-copy {
+/* .hero-copy {
   margin-bottom: 2rem;
-}
+} */
 
 .small-badge {
   display: inline-block;
@@ -571,25 +570,32 @@ img {
 
 /* Footer */
 .app-footer {
-  background: #fff;
-  border-top: 1px solid rgba(0,0,0,0.03);
-  padding: 1.4rem 0 1.4rem;
-  margin-top: 0rem;
+  background: #ffffff;
+  border-top: 1px solid rgba(15, 23, 42, 0.04);
+  padding: 1.4rem 0;
+  /* margin-top: 3rem; */
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+.app-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-footer a:hover {
+  color: var(--brand);
+  text-decoration: none;
 }
 
 .footer-links a {
   margin-left: 1rem;
-  color: #4b5563;
   text-decoration: none;
-  font-size: 0.82rem;
-}
-
-.footer-links a:hover {
-  color: var(--brand);
+  font-size: 0.8rem;
 }
 
 .footer-links i {
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 /* Responsive */
