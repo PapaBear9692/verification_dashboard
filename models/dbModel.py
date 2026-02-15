@@ -206,7 +206,7 @@ class ProductDB:
             conn.close()
     
 
-    def assign_batch(self, p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom):
+    def assign_batch(self, p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom, created_by, p_lot_no):
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -225,6 +225,8 @@ class ProductDB:
                     p_exp_date,
                     int(p_batch_size),
                     p_uom,
+                    created_by,
+                    int(p_lot_no),
                     o_status_code,
                     o_status_msg
                 ]
@@ -297,22 +299,24 @@ class ProductDB:
         cursor = conn.cursor()
 
         try:
-            p_batch = cursor.var(oracledb.DB_TYPE_VARCHAR)
-            o_count = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
             cursor.callproc(
                 "GEN_SCRATCH_CODE",
                 [   
-                    p_batch,
+                    "TEST",
                     session['user_id'],
                     quantity,
-                    o_count
+                    o_status_code,
+                    o_status_msg
                 ]
             )
-            success_count = o_count.getvalue()
-            return success_count
+            status_code= o_status_code.getvalue()
+            status_msg = o_status_msg.getvalue()
+            return status_code, status_msg
         except Exception as e:
             print("Code generation failed:", e)
-            return []
+            return 0, "An error occurred while generating codes."
         finally:
             cursor.close()
             conn.close()

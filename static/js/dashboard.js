@@ -127,18 +127,33 @@ function getTimeZone() {
 }
 
 async function logoutUser() {
-    const response = await fetch("/logout", {
-        method: "GET", 
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
+    try {
+      const response = await fetch("/logout", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
 
-    const data = await response.json();
-    if (response.ok) {
-        window.location.href = data.redirect;
-    } else {
-        alert("Logout failed. Please try again.");
+      data = await response.json();
+
+      if (response.ok) {
+        window.location.href = data.redirect ;
+      } else {
+        Toastify({
+          text: (data && data.message) ? data.message : "Logout failed. Please try again.",
+          duration: 3000,
+          gravity: "top",
+          position: "center",
+          style: { background: "#b00020" },
+        }).showToast();
+      }
+    } catch (err) {
+      Toastify({
+        text: "Server unavailable. Please try again.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
     }
 }
 

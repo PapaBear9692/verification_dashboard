@@ -12,23 +12,24 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =====================
      Create Batch inputs (UPDATED HTML IDs)
      Parameters:
-     P_PROD_ID, P_GENERIC, P_PROD_NAME, P_BATCH, P_MNF_DATE, P_EXP_DATE, P_BATCH_SIZE, P_UOM
+     P_PROD_ID, P_GENERIC, P_PROD_NAME, P_BATCH, P_LOT_NO, P_MNF_DATE, P_EXP_DATE, P_BATCH_SIZE, P_UOM
   ====================== */
   const prodIdInput = document.getElementById("prodIdInput");
   const genericInput = document.getElementById("genericInput");
   const prodNameInput = document.getElementById("prodNameInput");
   const batchInput = document.getElementById("batchInput");
+  const lotNoInput = document.getElementById("lotNoInput");
   const mnfDateInput = document.getElementById("mnfDateInput");
   const expDateInput = document.getElementById("expDateInput");
   const batchSizeInput = document.getElementById("batchSizeInput");
   const uomInput = document.getElementById("uomInput");
 
-  // Export inputs (by name) - unchanged
+  // Export inputs (by name)
   const exportBatchInput = exportForm.querySelector("input[name='exportBatch']");
   const exportTypeSelect = exportForm.querySelector("select[name='exportType']");
   const exportFormatSelect = exportForm.querySelector("select[name='exportFormat']");
 
-  // Modal + confirm fields (UPDATED)
+  // Modal + confirm fields
   const modalEl = document.getElementById("batchConfirmModal");
   const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
@@ -40,6 +41,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmExpDate = document.getElementById("confirmExpDate");
   const confirmBatchSize = document.getElementById("confirmBatchSize");
   const confirmUom = document.getElementById("confirmUom");
+
+  // ✅ IMPORTANT:
+  // Your HTML currently DOES NOT have <div id="confirmLotNo"></div>
+  // So we must not require it in JS, otherwise it breaks.
+  // We'll handle it safely:
+  const confirmLotNo = document.getElementById("confirmLotNo"); // may be null
 
   // Back-to-top
   const backToTopBtn = document.getElementById("backToTopBtn");
@@ -58,13 +65,48 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeZoneHiddenInputs();
   };
 
+  // ✅ FIXED LOGOUT:
+  // Your pasted JS had 2 bugs:
+  // 1) `data = await response.json()` missing `const/let` (creates error in strict mode)
+  // 2) If /logout returns HTML (redirect), response.json() throws and logout "does nothing"
   window.logoutUser = async function () {
     try {
-      await fetch("/logout", { method: "POST" });
-    } catch (_) {
-      // ignore
-    } finally {
-      window.location.href = "/login";
+      const response = await fetch("/logout", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin", // ✅ make sure session cookie is sent
+      });
+
+      // Try JSON; if it fails, fallback to redirect
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (_) {
+        data = null;
+      }
+
+      if (response.ok) {
+        // If backend returns {redirect:"/login"} use it, else fallback
+        const redirectUrl = data && data.redirect ? data.redirect : "/login";
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      Toastify({
+        text: (data && data.message) ? data.message : "Logout failed. Please try again.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
+    } catch (err) {
+      Toastify({
+        text: "Server unavailable. Please try again.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
     }
   };
 
@@ -80,9 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.openBatchConfirmation = function () {
     const payload = collectCreateBatchPayload();
 
-    /* =====================
-       FRONTEND VALIDATION
-    ====================== */
     const error = validateCreateBatch(payload);
     if (error) {
       Toastify({
@@ -95,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Fill modal preview
     fillBatchConfirmModal(payload);
 
     pendingBatchPayload = payload;
@@ -114,7 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // best-effort: locate confirm button in modal footer
     const confirmBtn = modalEl.querySelector(".modal-footer .btn.btn-primary");
     if (confirmBtn) {
       confirmBtn.disabled = true;
@@ -122,10 +159,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // ✅ Your API endpoint
       const response = await fetch("/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify(pendingBatchPayload),
       });
 
@@ -151,9 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
         duration: 3000,
         gravity: "top",
         position: "center",
-        style: {
-          background: " #02630c",
-        },
+        style: { background: " #02630c" },
       }).showToast();
     } catch (err) {
       Toastify({
@@ -178,9 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.exportBatchData = async function () {
     const payload = collectExportPayload();
 
-    /* =====================
-       FRONTEND VALIDATION
-    ====================== */
     const error = validateExport(payload);
     if (error) {
       Toastify({
@@ -193,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // best-effort: locate export button
     const exportBtn = document.getElementById("exportBtn");
     if (exportBtn) {
       exportBtn.disabled = true;
@@ -201,10 +232,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // This endpoint should return a file (pdf/csv).
       const response = await fetch("/batch/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify(payload),
       });
 
@@ -222,7 +253,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const blob = await response.blob();
 
-      // filename (try from header, else fallback)
       const fileExt = payload.exportFormat.toLowerCase() === "csv" ? "csv" : "pdf";
       const defaultName = `${payload.batchNumber}_${payload.exportType}.${fileExt}`;
 
@@ -259,14 +289,12 @@ document.addEventListener("DOMContentLoaded", () => {
   ====================== */
 
   function collectCreateBatchPayload() {
-    // IMPORTANT:
-    // - Dates are sent as "YYYY-MM-DD"
-    // - Backend should convert them to DATE (Oracle TO_DATE(..., 'YYYY-MM-DD')) if needed.
     return {
       P_PROD_ID: Number((prodIdInput?.value || "").trim()),
       P_GENERIC: (genericInput?.value || "").trim(),
       P_PROD_NAME: (prodNameInput?.value || "").trim(),
       P_BATCH: (batchInput?.value || "").trim(),
+      P_LOT_NO: (lotNoInput?.value || "").trim(),
       P_MNF_DATE: (mnfDateInput?.value || "").trim(), // yyyy-mm-dd
       P_EXP_DATE: (expDateInput?.value || "").trim(), // yyyy-mm-dd
       P_BATCH_SIZE: Number((batchSizeInput?.value || "").trim()),
@@ -279,36 +307,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!p.P_PROD_ID || Number.isNaN(p.P_PROD_ID) || p.P_PROD_ID < 1) {
       return "Product ID must be a positive number.";
     }
-
-    if (!p.P_GENERIC || p.P_GENERIC.length < 2) {
-      return "Generic is too short.";
-    }
-
-    if (!p.P_PROD_NAME || p.P_PROD_NAME.length < 2) {
-      return "Product name is too short.";
-    }
-
-    if (!p.P_BATCH || p.P_BATCH.length < 3) {
-      return "Batch looks too short.";
-    }
-
-    if (!p.P_MNF_DATE) {
-      return "Please select manufacturing date.";
-    }
-
-    if (!p.P_EXP_DATE) {
-      return "Please select expiry date.";
-    }
-
+    if (!p.P_GENERIC || p.P_GENERIC.length < 2) return "Generic is too short.";
+    if (!p.P_PROD_NAME || p.P_PROD_NAME.length < 2) return "Product name is too short.";
+    if (!p.P_BATCH || p.P_BATCH.length < 3) return "Batch looks too short.";
+    if (!p.P_LOT_NO || p.P_LOT_NO.length < 2) return "Lot number is required.";
+    if (!p.P_MNF_DATE) return "Please select manufacturing date.";
+    if (!p.P_EXP_DATE) return "Please select expiry date.";
     if (!p.P_BATCH_SIZE || Number.isNaN(p.P_BATCH_SIZE) || p.P_BATCH_SIZE < 1) {
       return "Batch size must be at least 1.";
     }
+    if (!p.P_UOM || p.P_UOM.length < 1) return "Please enter UOM.";
 
-    if (!p.P_UOM || p.P_UOM.length < 1) {
-      return "Please enter UOM.";
-    }
-
-    // Date logic: expiry must be after manufacturing
     const mnf = new Date(p.P_MNF_DATE);
     const exp = new Date(p.P_EXP_DATE);
     if (String(mnf) === "Invalid Date") return "Manufacturing date is invalid.";
@@ -323,6 +332,7 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmGeneric.textContent = p.P_GENERIC || "—";
     confirmProdName.textContent = p.P_PROD_NAME || "—";
     confirmBatch.textContent = p.P_BATCH || "—";
+    if (confirmLotNo) confirmLotNo.textContent = p.P_LOT_NO || "—"; // safe
     confirmMnfDate.textContent = p.P_MNF_DATE || "—";
     confirmExpDate.textContent = p.P_EXP_DATE || "—";
     confirmBatchSize.textContent = String(p.P_BATCH_SIZE || "—");
@@ -332,8 +342,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function collectExportPayload() {
     return {
       batchNumber: exportBatchInput.value.trim(),
-      exportType: exportTypeSelect.value,     // summary | codes | both
-      exportFormat: exportFormatSelect.value, // pdf | csv
+      exportType: exportTypeSelect.value,
+      exportFormat: exportFormatSelect.value,
       timezone: getTimezone(),
     };
   }
@@ -381,7 +391,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseFilenameFromHeader(contentDisposition) {
-    // supports: attachment; filename="file.pdf" OR filename*=UTF-8''file.pdf
     const match = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(contentDisposition);
     const name = match ? (match[1] || match[2]) : null;
     return name ? decodeURIComponent(name) : null;

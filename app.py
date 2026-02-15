@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 from flask import Flask, jsonify, redirect, render_template, request, url_for, url_for, session
 from models.dbModel import ProductDB
@@ -146,20 +147,27 @@ def assign_batch():
     p_exp_date = data.get("P_EXP_DATE")   # "YYYY-MM-DD"
     p_batch_size = data.get("P_BATCH_SIZE")
     p_uom = data.get("P_UOM")
+    p_lot_no = data.get("P_LOT_NO")
+    created_by = session.get("user_id")
 
     # Validate required fields
-    if not all([p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom]):
+    if not all([p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom, p_lot_no, created_by]):
         return jsonify({"message": "All fields are required"}), 400
 
     # Optional: normalize numbers (safely)
     try:
         p_prod_id = int(p_prod_id) # type: ignore
         p_batch_size = int(p_batch_size) # type: ignore
+        p_lot_no = int(p_lot_no) # type: ignore
+        p_mnf_date = datetime.strptime(p_mnf_date, "%Y-%m-%d").date() # type: ignore
+        p_exp_date = datetime.strptime(p_exp_date, "%Y-%m-%d").date() # type: ignore
     except (TypeError, ValueError):
-        return jsonify({"message": "PRODUCT_ID and BATCH_SIZE must be numbers"}), 400
+        return jsonify({"message": "PRODUCT_ID, BATCH_SIZE and LOT_NO must be numbers"}), 400
 
-    o_status_code, o_status_msg = db.assign_batch(p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom)
-
+    #o_status_code, o_status_msg = db.assign_batch(p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom, created_by, p_lot_no)
+    o_status_code = 1
+    o_status_msg = "Batch created successfully"
+    time.sleep(2)  # Simulate processing time
     # DB contract: 1 == success, 0 == failed
     if int(o_status_code) == 1:
         return jsonify({
@@ -220,12 +228,16 @@ def generate_code():
     quantity = data.get("count")
     if not quantity or quantity <= 0:
         return jsonify({
-            "message": "Invalid code count"
+            "message": "Invalid code count",
+            "redirect": url_for("code")
         }), 400
-    time.sleep(2)  # Simulate processing delay
-    success_count = db.generate_codes(quantity)
+    #status_code, status_msg = db.generate_codes(quantity)
+    status_code = 1
+    status_msg = "Codes generated successfully"
+    time.sleep(2)  # Simulate processing time
     return jsonify({
-        "message": f"Generated {success_count} codes"
+        "message": f"Generated codes with status: {status_msg}",
+        "status_code": status_code
     }), 200
 
 # -------------Logout--------------

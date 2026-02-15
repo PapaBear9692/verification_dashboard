@@ -110,11 +110,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.logoutUser = async function () {
     try {
-      await fetch("/logout", { method: "POST" });
-    } catch (_) {
-      // ignore
-    } finally {
-      window.location.href = "{{ url_for('login_page') }}";
+      const response = await fetch("/logout", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      data = await response.json();
+
+      if (response.ok) {
+        window.location.href = data.redirect ;
+      } else {
+        Toastify({
+          text: (data && data.message) ? data.message : "Logout failed. Please try again.",
+          duration: 3000,
+          gravity: "top",
+          position: "center",
+          style: { background: "#b00020" },
+        }).showToast();
+      }
+    } catch (err) {
+      Toastify({
+        text: "Server unavailable. Please try again.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
     }
   };
 
@@ -412,8 +433,8 @@ document.addEventListener("DOMContentLoaded", () => {
         resetGenerateForm();
         loadCodeSummary();
         Toastify({
-          text: "Codes generated successfully",
-          duration: 3000,
+          text: data.message || "Codes generated successfully!",
+          duration: 2000,
           gravity: "top",
           position: "center",
           style: {
