@@ -120,6 +120,8 @@ def get_dashboard_data():
     data = db.get_dashboard_stats()
     return jsonify(data)
 
+
+
 # -------------batch assign--------------
 @app.route('/batch', methods=['GET'])
 def batch():
@@ -128,34 +130,48 @@ def batch():
     return render_template('batch.html')
 
 
+
 @app.route('/batch', methods=['POST'])
 def assign_batch():
     if not session.get("login"):
-        return jsonify({
-            "message": "Unauthorized"
-        }), 401
+        return jsonify({"message": "Unauthorized"}), 401
 
-    data = request.get_json()
-    batchNumber = data.get("batchNumber")
-    codeCount = data.get("codeCount")
-    product = data.get("product")
-    productionDate = data.get("productionDate")
-    factory = data.get("factory")
-    market = data.get("market")
-    notes = data.get("notes")
+    data = request.get_json(silent=True) or {}
 
-    if not all([batchNumber, codeCount, product, productionDate, factory, market]):
+    p_prod_id = data.get("P_PROD_ID")
+    p_generic = data.get("P_GENERIC")
+    p_prod_name = data.get("P_PROD_NAME")
+    p_batch = data.get("P_BATCH")
+    p_mnf_date = data.get("P_MNF_DATE")   # "YYYY-MM-DD"
+    p_exp_date = data.get("P_EXP_DATE")   # "YYYY-MM-DD"
+    p_batch_size = data.get("P_BATCH_SIZE")
+    p_uom = data.get("P_UOM")
+
+    # Validate required fields
+    if not all([p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom]):
+        return jsonify({"message": "All fields are required"}), 400
+
+    # Optional: normalize numbers (safely)
+    try:
+        p_prod_id = int(p_prod_id) # type: ignore
+        p_batch_size = int(p_batch_size) # type: ignore
+    except (TypeError, ValueError):
+        return jsonify({"message": "PRODUCT_ID and BATCH_SIZE must be numbers"}), 400
+
+    o_status_code, o_status_msg = db.assign_batch(p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom)
+
+    # DB contract: 1 == success, 0 == failed
+    if int(o_status_code) == 1:
         return jsonify({
-            "message": "All fields are required"
-        }), 400
-    
-    
-    # Here you would typically process the batch assignment
-    time.sleep(2)  # Simulate processing delay
-    lotNumber = db.assign_batch(batchNumber, codeCount, product, productionDate, factory, market, notes)
+            "status_code": int(o_status_code),
+            "message": o_status_msg or f"Batch {p_batch} created successfully"
+        }), 200
+
     return jsonify({
-        "message": f"Batch {batchNumber} assigned to {market} with lot number {lotNumber}"
-    }), 200
+        "status_code": int(o_status_code) if o_status_code is not None else 0,
+        "message": o_status_msg or "Batch creation failed"
+    }), 400
+
 
 
 @app.route('/batch/export', methods=['POST'])

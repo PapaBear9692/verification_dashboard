@@ -9,31 +9,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const createForm = document.getElementById("createBatchForm");
   const exportForm = document.getElementById("exportBatchForm");
 
-  // Create Batch inputs (by name)
-  const batchNumberInput = createForm.querySelector("input[name='batchNumber']");
-  const codeCountInput = createForm.querySelector("input[name='codeCount']");
-  const productInput = createForm.querySelector("input[name='product']");
-  const productionDateInput = createForm.querySelector("input[name='productionDate']");
-  const factoryInput = createForm.querySelector("input[name='factory']");
-  const marketSelect = createForm.querySelector("select[name='market']");
-  const notesInput = createForm.querySelector("textarea[name='notes']");
+  /* =====================
+     Create Batch inputs (UPDATED HTML IDs)
+     Parameters:
+     P_PROD_ID, P_GENERIC, P_PROD_NAME, P_BATCH, P_MNF_DATE, P_EXP_DATE, P_BATCH_SIZE, P_UOM
+  ====================== */
+  const prodIdInput = document.getElementById("prodIdInput");
+  const genericInput = document.getElementById("genericInput");
+  const prodNameInput = document.getElementById("prodNameInput");
+  const batchInput = document.getElementById("batchInput");
+  const mnfDateInput = document.getElementById("mnfDateInput");
+  const expDateInput = document.getElementById("expDateInput");
+  const batchSizeInput = document.getElementById("batchSizeInput");
+  const uomInput = document.getElementById("uomInput");
 
-  // Export inputs (by name)
+  // Export inputs (by name) - unchanged
   const exportBatchInput = exportForm.querySelector("input[name='exportBatch']");
   const exportTypeSelect = exportForm.querySelector("select[name='exportType']");
   const exportFormatSelect = exportForm.querySelector("select[name='exportFormat']");
 
-  // Modal + confirm fields
+  // Modal + confirm fields (UPDATED)
   const modalEl = document.getElementById("batchConfirmModal");
   const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-  const confirmBatchNumber = document.getElementById("confirmBatchNumber");
-  const confirmCodeCount = document.getElementById("confirmCodeCount");
-  const confirmProduct = document.getElementById("confirmProduct");
-  const confirmProductionDate = document.getElementById("confirmProductionDate");
-  const confirmFactory = document.getElementById("confirmFactory");
-  const confirmMarket = document.getElementById("confirmMarket");
-  const confirmNotes = document.getElementById("confirmNotes");
+  const confirmProdId = document.getElementById("confirmProdId");
+  const confirmGeneric = document.getElementById("confirmGeneric");
+  const confirmProdName = document.getElementById("confirmProdName");
+  const confirmBatch = document.getElementById("confirmBatch");
+  const confirmMnfDate = document.getElementById("confirmMnfDate");
+  const confirmExpDate = document.getElementById("confirmExpDate");
+  const confirmBatchSize = document.getElementById("confirmBatchSize");
+  const confirmUom = document.getElementById("confirmUom");
 
   // Back-to-top
   const backToTopBtn = document.getElementById("backToTopBtn");
@@ -79,7 +85,13 @@ document.addEventListener("DOMContentLoaded", () => {
     ====================== */
     const error = validateCreateBatch(payload);
     if (error) {
-      alert(error);
+      Toastify({
+        text: error,
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
       return;
     }
 
@@ -92,7 +104,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.confirmCreateBatch = async function () {
     if (!pendingBatchPayload) {
-      alert("Nothing to submit.");
+      Toastify({
+        text: "Nothing to submit.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
       return;
     }
 
@@ -104,34 +122,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
+      // ✅ Your API endpoint
       const response = await fetch("/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(pendingBatchPayload)
+        body: JSON.stringify(pendingBatchPayload),
       });
 
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        alert(data.message || "Batch creation failed");
+        Toastify({
+          text: data.message || "Batch creation failed",
+          duration: 3000,
+          gravity: "top",
+          position: "center",
+          style: { background: "#b00020" },
+        }).showToast();
         return;
       }
 
       modal.hide();
       createForm.reset();
       pendingBatchPayload = null;
+
       Toastify({
         text: data.message || "Batch created successfully",
-        duration: 3000, // Disappears after 3 seconds
-        gravity: "top", // `top` or `bottom`
-        position: "center", // `left`, `center` or `right`
+        duration: 3000,
+        gravity: "top",
+        position: "center",
         style: {
-          background: " #02630c", // Green success color
+          background: " #02630c",
         },
       }).showToast();
-
     } catch (err) {
-      alert("Server unavailable. Please try again.");
+      Toastify({
+        text: "Server unavailable. Please try again.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
     } finally {
       if (confirmBtn) {
         confirmBtn.disabled = false;
@@ -152,7 +183,13 @@ document.addEventListener("DOMContentLoaded", () => {
     ====================== */
     const error = validateExport(payload);
     if (error) {
-      alert(error);
+      Toastify({
+        text: error,
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
       return;
     }
 
@@ -165,16 +202,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // This endpoint should return a file (pdf/csv).
-      // We'll request it and download it.
       const response = await fetch("/batch/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        alert(errData.message || "Export failed");
+        Toastify({
+          text: errData.message || "Export failed",
+          duration: 3000,
+          gravity: "top",
+          position: "center",
+          style: { background: "#b00020" },
+        }).showToast();
         return;
       }
 
@@ -189,7 +231,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       downloadBlob(blob, fileName);
     } catch (err) {
-      alert("Server unavailable. Please try again.");
+      Toastify({
+        text: "Server unavailable. Please try again.",
+        duration: 3000,
+        gravity: "top",
+        position: "center",
+        style: { background: "#b00020" },
+      }).showToast();
     } finally {
       if (exportBtn) {
         exportBtn.disabled = false;
@@ -211,66 +259,74 @@ document.addEventListener("DOMContentLoaded", () => {
   ====================== */
 
   function collectCreateBatchPayload() {
+    // IMPORTANT:
+    // - Dates are sent as "YYYY-MM-DD"
+    // - Backend should convert them to DATE (Oracle TO_DATE(..., 'YYYY-MM-DD')) if needed.
     return {
-      batchNumber: batchNumberInput.value.trim(),
-      codeCount: Number(codeCountInput.value),
-      product: productInput.value.trim(),
-      productionDate: productionDateInput.value, // yyyy-mm-dd
-      factory: factoryInput.value.trim(),
-      market: marketSelect.value,
-      notes: notesInput.value.trim(),
-      timezone: getTimezone()
+      P_PROD_ID: Number((prodIdInput?.value || "").trim()),
+      P_GENERIC: (genericInput?.value || "").trim(),
+      P_PROD_NAME: (prodNameInput?.value || "").trim(),
+      P_BATCH: (batchInput?.value || "").trim(),
+      P_MNF_DATE: (mnfDateInput?.value || "").trim(), // yyyy-mm-dd
+      P_EXP_DATE: (expDateInput?.value || "").trim(), // yyyy-mm-dd
+      P_BATCH_SIZE: Number((batchSizeInput?.value || "").trim()),
+      P_UOM: (uomInput?.value || "").trim(),
+      timezone: getTimezone(),
     };
   }
 
   function validateCreateBatch(p) {
-    if (!p.batchNumber || !p.product || !p.productionDate || !p.factory || !p.market) {
-      return "Please fill all required fields.";
+    if (!p.P_PROD_ID || Number.isNaN(p.P_PROD_ID) || p.P_PROD_ID < 1) {
+      return "Product ID must be a positive number.";
     }
 
-    if (!p.codeCount || Number.isNaN(p.codeCount) || p.codeCount < 1) {
-      return "Code count must be at least 1.";
+    if (!p.P_GENERIC || p.P_GENERIC.length < 2) {
+      return "Generic is too short.";
     }
 
-    // Basic batch pattern check (optional)
-    if (p.batchNumber.length < 3) {
-      return "Batch number looks too short.";
-    }
-
-    // Production date not in future (optional)
-    const prod = new Date(p.productionDate);
-    if (String(prod) !== "Invalid Date") {
-      const today = new Date();
-      today.setHours(23, 59, 59, 59);
-      if (prod > today) {
-        return "Production date cannot be in the future.";
-      }
-    }
-
-    if (p.product.length < 2) {
+    if (!p.P_PROD_NAME || p.P_PROD_NAME.length < 2) {
       return "Product name is too short.";
     }
 
-    if (p.factory.length < 2) {
-      return "Factory name is too short.";
+    if (!p.P_BATCH || p.P_BATCH.length < 3) {
+      return "Batch looks too short.";
     }
 
-    // Prevent giant single-request creates (adjust as you like)
-    if (p.codeCount > 200000) {
-      return "Too many codes for one batch. Please use a smaller number.";
+    if (!p.P_MNF_DATE) {
+      return "Please select manufacturing date.";
     }
+
+    if (!p.P_EXP_DATE) {
+      return "Please select expiry date.";
+    }
+
+    if (!p.P_BATCH_SIZE || Number.isNaN(p.P_BATCH_SIZE) || p.P_BATCH_SIZE < 1) {
+      return "Batch size must be at least 1.";
+    }
+
+    if (!p.P_UOM || p.P_UOM.length < 1) {
+      return "Please enter UOM.";
+    }
+
+    // Date logic: expiry must be after manufacturing
+    const mnf = new Date(p.P_MNF_DATE);
+    const exp = new Date(p.P_EXP_DATE);
+    if (String(mnf) === "Invalid Date") return "Manufacturing date is invalid.";
+    if (String(exp) === "Invalid Date") return "Expiry date is invalid.";
+    if (exp <= mnf) return "Expiry date must be after manufacturing date.";
 
     return null;
   }
 
   function fillBatchConfirmModal(p) {
-    confirmBatchNumber.textContent = p.batchNumber || "—";
-    confirmCodeCount.textContent = String(p.codeCount || "—");
-    confirmProduct.textContent = p.product || "—";
-    confirmProductionDate.textContent = p.productionDate || "—";
-    confirmFactory.textContent = p.factory || "—";
-    confirmMarket.textContent = p.market || "—";
-    confirmNotes.textContent = p.notes ? p.notes : "—";
+    confirmProdId.textContent = String(p.P_PROD_ID || "—");
+    confirmGeneric.textContent = p.P_GENERIC || "—";
+    confirmProdName.textContent = p.P_PROD_NAME || "—";
+    confirmBatch.textContent = p.P_BATCH || "—";
+    confirmMnfDate.textContent = p.P_MNF_DATE || "—";
+    confirmExpDate.textContent = p.P_EXP_DATE || "—";
+    confirmBatchSize.textContent = String(p.P_BATCH_SIZE || "—");
+    confirmUom.textContent = p.P_UOM || "—";
   }
 
   function collectExportPayload() {
@@ -278,7 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
       batchNumber: exportBatchInput.value.trim(),
       exportType: exportTypeSelect.value,     // summary | codes | both
       exportFormat: exportFormatSelect.value, // pdf | csv
-      timezone: getTimezone()
+      timezone: getTimezone(),
     };
   }
 
@@ -325,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseFilenameFromHeader(contentDisposition) {
-    // supports: attachment; filename="file.pdf"
+    // supports: attachment; filename="file.pdf" OR filename*=UTF-8''file.pdf
     const match = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(contentDisposition);
     const name = match ? (match[1] || match[2]) : null;
     return name ? decodeURIComponent(name) : null;

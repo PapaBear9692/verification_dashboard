@@ -98,87 +98,109 @@
           <form id="createBatchForm">
 
             <div class="row g-3">
-              
-                <!-- Batch Number -->
-                <div class="col-md-6">
-                  <label class="form-label">Batch Number</label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    name="batchNumber"
-                    placeholder="e.g. BATCH-2026-001"
-                    required
-                  />
-                </div>
 
-                <!-- Code Count -->
-                <div class="col-md-6">
-                  <label class="form-label">Code Count</label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    name="codeCount"
-                    placeholder="e.g. 1000"
-                    min="1"
-                    required
-                  />
-                </div>
-
-              <!-- Product -->
+              <!-- Product ID -->
               <div class="col-md-6">
-                <label class="form-label">Product</label>
+                <label class="form-label" for="prodIdInput">Product ID</label>
                 <input
-                  type="text"
+                  id="prodIdInput"
+                  type="number"
                   class="form-control"
-                  name="product"
-                  placeholder="e.g. Premium Tea Pack"
+                  name="prodId"
+                  placeholder="e.g. 1001"
+                  min="1"
                   required
                 />
               </div>
 
-              <!-- Production Date -->
+              <!-- Generic -->
               <div class="col-md-6">
-                <label class="form-label">Production Date</label>
+                <label class="form-label" for="genericInput">Generic Name</label>
                 <input
+                  id="genericInput"
+                  type="text"
+                  class="form-control"
+                  name="generic"
+                  placeholder="e.g. Paracetamol"
+                  required
+                />
+              </div>
+
+              <!-- Product Name -->
+              <div class="col-md-6">
+                <label class="form-label" for="prodNameInput">Product Name</label>
+                <input
+                  id="prodNameInput"
+                  type="text"
+                  class="form-control"
+                  name="prodName"
+                  placeholder="e.g. Napa 500mg"
+                  required
+                />
+              </div>
+
+              <!-- Batch -->
+              <div class="col-md-6">
+                <label class="form-label" for="batchInput">Batch Number</label>
+                <input
+                  id="batchInput"
+                  type="text"
+                  class="form-control"
+                  name="batch"
+                  placeholder="e.g. BATCH-2026-001"
+                  required
+                />
+              </div>
+
+              <!-- Manufacturing Date -->
+              <div class="col-md-6">
+                <label class="form-label" for="mnfDateInput">Manufacturing Date</label>
+                <input
+                  id="mnfDateInput"
                   type="date"
                   class="form-control"
-                  name="productionDate"
+                  name="mnfDate"
                   required
                 />
               </div>
 
-              <!-- Factory -->
+              <!-- Expiry Date -->
               <div class="col-md-6">
-                <label class="form-label">Factory</label>
+                <label class="form-label" for="expDateInput">Expiry Date</label>
                 <input
+                  id="expDateInput"
+                  type="date"
+                  class="form-control"
+                  name="expDate"
+                  required
+                />
+              </div>
+
+              <!-- Batch Size -->
+              <div class="col-md-6">
+                <label class="form-label" for="batchSizeInput">Batch Size</label>
+                <input
+                  id="batchSizeInput"
+                  type="number"
+                  class="form-control"
+                  name="batchSize"
+                  placeholder="e.g. 50000"
+                  min="1"
+                  required
+                />
+              </div>
+
+              <!-- UOM -->
+              <div class="col-md-6">
+                <label class="form-label" for="uomInput">Unit Of Mesurement</label>
+                <input
+                  id="uomInput"
                   type="text"
                   class="form-control"
-                  name="factory"
-                  placeholder="e.g. Factory A"
+                  name="uom"
+                  placeholder="e.g. TAB, PCS, BOX"
                   required
                 />
-              </div>
-
-              <!-- Destination Market -->
-              <div class="col-md-6">
-                <label class="form-label">Destination Market</label>
-                <select class="form-select" name="market" required>
-                  <option value="">Select market</option>
-                  <option value="Bangladesh">Bangladesh</option>
-                  <option value="China">China</option>
-                  <option value="Kenya">Kenya</option>
-                </select>
-              </div>
-
-              <!-- Notes -->
-              <div class="col-12">
-                <label class="form-label">Notes</label>
-                <textarea
-                  class="form-control"
-                  name="notes"
-                  rows="3"
-                  placeholder="Optional notes about this batch"
-                ></textarea>
               </div>
 
             </div>
@@ -232,8 +254,9 @@
 
             <!-- Batch Input -->
             <div class="col-md-4">
-              <label class="form-label">Batch Number</label>
+              <label class="form-label" for="exportBatchInput">Batch Number</label>
               <input
+                id="exportBatchInput"
                 type="text"
                 class="form-control"
                 name="exportBatch"
@@ -244,8 +267,8 @@
 
             <!-- Export Type -->
             <div class="col-md-4">
-              <label class="form-label">Export Content</label>
-              <select class="form-select" name="exportType" required>
+              <label class="form-label" for="exportTypeSelect">Export Content</label>
+              <select class="form-select" name="exportType" id="exportTypeSelect" required>
                 <option value="codes">Codes only</option>
                 <option value="both">Summary + Codes</option>
                 <option value="summary">Summary only</option>
@@ -254,8 +277,8 @@
 
             <!-- Export Format -->
             <div class="col-md-4">
-              <label class="form-label">File Format</label>
-              <select class="form-select" name="exportFormat" required>
+              <label class="form-label" for="exportFormatSelect">File Format</label>
+              <select class="form-select" name="exportFormat" id="exportFormatSelect" required>
                 <option value="pdf">PDF</option>
                 <option value="csv">CSV</option>
               </select>
@@ -334,38 +357,43 @@
           <div class="row g-3">
 
             <div class="col-md-6">
-              <strong>Batch Number:</strong>
-              <div id="confirmBatchNumber"></div>
+              <strong>Product ID:</strong>
+              <div id="confirmProdId"></div>
             </div>
 
             <div class="col-md-6">
-              <strong>Code Count:</strong>
-              <div id="confirmCodeCount"></div>
+              <strong>Generic:</strong>
+              <div id="confirmGeneric"></div>
             </div>
 
             <div class="col-md-6">
-              <strong>Product:</strong>
-              <div id="confirmProduct"></div>
+              <strong>Product Name:</strong>
+              <div id="confirmProdName"></div>
             </div>
 
             <div class="col-md-6">
-              <strong>Production Date:</strong>
-              <div id="confirmProductionDate"></div>
+              <strong>Batch:</strong>
+              <div id="confirmBatch"></div>
             </div>
 
             <div class="col-md-6">
-              <strong>Factory:</strong>
-              <div id="confirmFactory"></div>
+              <strong>Manufacturing Date:</strong>
+              <div id="confirmMnfDate"></div>
             </div>
 
             <div class="col-md-6">
-              <strong>Destination Market:</strong>
-              <div id="confirmMarket"></div>
+              <strong>Expiry Date:</strong>
+              <div id="confirmExpDate"></div>
             </div>
 
-            <div class="col-12">
-              <strong>Notes:</strong>
-              <div id="confirmNotes"></div>
+            <div class="col-md-6">
+              <strong>Batch Size:</strong>
+              <div id="confirmBatchSize"></div>
+            </div>
+
+            <div class="col-md-6">
+              <strong>UOM:</strong>
+              <div id="confirmUom"></div>
             </div>
 
           </div>

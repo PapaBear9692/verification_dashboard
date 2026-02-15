@@ -206,16 +206,37 @@ class ProductDB:
             conn.close()
     
 
-    def assign_batch(self, batchNumber, codeCount, product, productionDate, factory, market, notes):
+    def assign_batch(self, p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom):
         conn = self._get_connection()
         cursor = conn.cursor()
 
         try:
-            return 25
+            o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+
+            cursor.callproc(
+                "INSERT_PRODUCT_AUTH_MASTER",
+                [
+                    int(p_prod_id),
+                    p_generic,
+                    p_prod_name,
+                    p_batch,
+                    p_mnf_date,
+                    p_exp_date,
+                    int(p_batch_size),
+                    p_uom,
+                    o_status_code,
+                    o_status_msg
+                ]
+            )
+
+            status_code = o_status_code.getvalue()
+            status_msg = o_status_msg.getvalue()
+            return status_code, status_msg
 
         except Exception as e:
             print("Batch assignment failed:", e)
-            return -1
+            return 0, "An error occurred while assigning the batch."
         finally:
             cursor.close()
             conn.close()
