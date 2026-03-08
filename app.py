@@ -231,10 +231,10 @@ def generate_code():
             "message": "Invalid code count",
             "redirect": url_for("code")
         }), 400
-    #status_code, status_msg = db.generate_codes(quantity)
-    status_code = 1
-    status_msg = "Codes generated successfully"
-    time.sleep(2)  # Simulate processing time
+    status_code, status_msg = db.generate_codes(quantity)
+    #status_code = 1
+    #status_msg = "Codes generated successfully"
+    #time.sleep(2)  # Simulate processing time
     return jsonify({
         "message": f"Generated codes with status: {status_msg}",
         "status_code": status_code

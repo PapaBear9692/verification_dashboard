@@ -302,7 +302,7 @@ class ProductDB:
             o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
             cursor.callproc(
-                "GEN_SCRATCH_CODE",
+                "GEN_SCRATCH_CODE_test",
                 [   
                     "TEST",
                     session['user_id'],
