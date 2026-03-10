@@ -14,18 +14,19 @@ else:
 
 
 class ProductDB:
-    # Enable thick mode
-    try:
-        print("Trying to connect to Database...")
-        conn = oracledb.connect(user= os.getenv("DB_USER"),
-                                password= os.getenv("DB_PASSWORD"), 
-                                dsn= os.getenv("DB_DSN"))
-        print("Connected successfully..!")
-        conn.close()
-    except oracledb.DatabaseError as e:
-        print("Connection failed:", e)
+    # # Enable thick mode
+    # try:
+    #     print("Trying to connect to Database...")
+    #     conn = oracledb.connect(user= os.getenv("DB_USER"),
+    #                             password= os.getenv("DB_PASSWORD"), 
+    #                             dsn= os.getenv("DB_DSN"))
+    #     print("Connected successfully..!")
+    #     conn.close()
+    # except oracledb.DatabaseError as e:
+    #     print("Connection failed:", e)
     
     # Initialize the DB manager with Oracle connection details.
+    
     def __init__(self, user=os.getenv("DB_USER"), password=os.getenv("DB_PASSWORD"), dsn=os.getenv("DB_DSN")):
         self.user = user
         self.password = password
@@ -131,7 +132,32 @@ class ProductDB:
             cursor.close()
             conn.close()
     
+    def get_user_email(self, username):
+        conn = self._get_connection()
+        cursor = conn.cursor()
 
+        try:
+            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+
+            # cursor.callproc(
+            #     "verify_user_get_email_prc",
+            #     [
+            #         username,
+            #         o_user_email,
+            #         o_status_msg
+            #     ]
+            # )
+            # result =  o_user_email.getvalue()
+            # print("Status:", o_status_msg.getvalue())
+            result = 'tahsinulislam84@gmail.com'
+            return result
+        except Exception as e:
+            print("Failed:", e)
+            return {'user_id': None}
+        finally:
+            cursor.close()
+            conn.close()
       
     def register_user(self, username, full_name, employee_id, phone, role, password, email):
         conn = self._get_connection()

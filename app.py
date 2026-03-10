@@ -1,12 +1,17 @@
 from datetime import datetime
 import time
+import os
 from flask import Flask, jsonify, redirect, render_template, request, url_for, url_for, session
 from models.dbModel import ProductDB
+from models.otpModel import OTPModel
+from dotenv import load_dotenv
 
 
 app = Flask(__name__)
-app.secret_key = "(this@is#a.super?secret129875Key}that%no@one97+shoudl&know/for?now.1563@!"
+load_dotenv()
+app.secret_key = os.getenv("APP.SECRET") 
 db = ProductDB()
+otp = OTPModel()
 
 
 # -------------Landing Page--------------
@@ -79,34 +84,93 @@ def register_user():
         "message": "Registration failed. Please try again."
     }), 500
 
-# -------------Reset Password--------------
+# =============================================================================
+# Reset Password — 3-step flow:
+#   Step 1: GET  /reset              → show the reset page
+#   Step 2: POST /reset/send-otp     → look up user email, send OTP
+#   Step 3: POST /reset/verify-otp   → verify the 6-digit OTP
+#   Step 4: POST /reset              → do the actual password reset (OTP-gated)
+# =============================================================================
+
 @app.route('/reset', methods=['GET'])
 def reset():
     return render_template('reset.html')
 
+
+@app.route("/reset/send-otp", methods=["POST"])
+def reset_send_otp():
+    """
+    Expects JSON: { "username": "john_doe" }
+    Looks up the user's registered email from DB, then sends OTP.
+    """
+    data = request.get_json()
+    username = str(data.get("username", "")).strip()
+
+    if not username or len(username) < 3:
+        return jsonify({"message": "Please enter a valid username."}), 400
+
+    # Look up the user's email from DB
+    # db.get_user_email() should return the email string or None if not found
+    user_email = db.get_user_email(username)
+    if not user_email:
+        # Intentionally vague — don't reveal whether username exists
+        return jsonify({"message": "If this username exists, an OTP will be sent to the registered email."}), 200
+
+    success, message = otp.send_otp(username, user_email)
+    if not success:
+        return jsonify({"message": message}), 500
+
+    return jsonify({"message": message}), 200
+
+
+@app.route("/reset/verify-otp", methods=["POST"])
+def reset_verify_otp():
+    """
+    Expects JSON: { "username": "john_doe", "otp": "123456" }
+    """
+    data = request.get_json()
+    username = str(data.get("username", "")).strip()
+    otp_input = str(data.get("otp", "")).strip()
+
+    if not username or not otp_input:
+        return jsonify({"message": "Username and OTP are required."}), 400
+
+    verified, message = otp.verify_otp(username, otp_input)
+    if not verified:
+        return jsonify({"message": message}), 400
+
+    return jsonify({"message": message}), 200
+
+
 @app.route("/reset", methods=["POST"])
 def reset_password():
+    """
+    Final step — only runs if OTP has been verified in this session.
+    Expects JSON: { "username": "...", "new_password": "...", "confirm_password": "..." }
+    """
     data = request.get_json()
-    username = str(data.get("username")).strip()
-    new_password = str(data.get("new_password")).strip()
-    confirm_password = str(data.get("confirm_password")).strip()
-    
+    username = str(data.get("username", "")).strip()
+    new_password = str(data.get("new_password", "")).strip()
+    confirm_password = str(data.get("confirm_password", "")).strip()
+
+    if not username or not new_password or not confirm_password:
+        return jsonify({"message": "All fields are required."}), 400
+
     if new_password != confirm_password:
-        print(f"Password mismatch: new_password='{new_password}' confirm_password='{confirm_password}'")  # Debug log
-        return jsonify({
-            "message": "Passwords do not match"
-        }), 400
-    print(f"Attempting password reset for username: {username}")  # Debug log
-    
+        return jsonify({"message": "Passwords do not match."}), 400
+
+    # Gate: OTP must have been verified in this session
+    if not otp.is_otp_verified(username):
+        return jsonify({"message": "OTP verification required before resetting password."}), 403
+
     reset_success, status_msg = db.reset_password(username, new_password, confirm_password)
+
     if reset_success:
-        return jsonify({
-            "message": status_msg
-        })
+        otp.clear_otp()   # clean up session OTP data after successful reset
+        return jsonify({"message": status_msg or "Password reset successfully."}), 200
     else:
-        return jsonify({
-            "message": status_msg or "Failed to reset password"
-        }), 500
+        return jsonify({"message": status_msg or "Failed to reset password."}), 500
+
 
 # -------------Dashboard--------------
 @app.route('/dashboard', methods=['GET'])

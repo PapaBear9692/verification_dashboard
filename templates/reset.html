@@ -17,7 +17,7 @@
   <!-- Font -->
   <link href="https://fonts.googleapis.com/css?family=Montserrat:400,500,600,700&display=swap" rel="stylesheet">
 
-  <!-- Custom CSS -->
+  <!-- Custom CSS (unchanged) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/reset.css') }}">
 </head>
 
@@ -41,78 +41,125 @@
 
       <div class="text-center mb-4">
         <h2 class="auth-title">Reset Password</h2>
-        <p class="auth-subtitle">Submit your request. Admin approval is required.</p>
+        <p class="auth-subtitle" id="pageSubtitle">Enter your username to receive an OTP.</p>
       </div>
 
-      <form id="resetForm" novalidate>
-        <div class="mb-3">
-          <label class="form-label">Username</label>
-          <input
-            type="text"
-            id="username"
-            class="form-control"
-            placeholder="Enter username"
-            autocomplete="username"
-            required
-          />
-        </div>
+      <!-- ===================== STEP 1: Username + Request OTP ===================== -->
+      <div id="step1">
+        <form id="requestOtpForm" novalidate>
 
-        <!-- <div class="mb-3">
-          <label class="form-label">Employee ID</label>
-          <input
-            type="text"
-            id="employeeId"
-            class="form-control"
-            placeholder="Enter employee ID"
-            required
-          />
-        </div> -->
-
-        <div class="mb-3">
-          <label class="form-label">New Password</label>
-          <input
-            type="password"
-            id="newPassword"
-            class="form-control"
-            placeholder="Enter new password"
-            minlength="8"
-            required
-          />
-        </div>
-
-        <div class="mb-2">
-          <label class="form-label">Confirm New Password</label>
-          <input
-            type="password"
-            id="confirmNewPassword"
-            class="form-control"
-            placeholder="Re-enter new password"
-            minlength="8"
-            required
-          />
-          <div id="matchError" class="error-text d-none">
-            <i class="fas fa-circle-exclamation"></i> Passwords do not match
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input
+              type="text"
+              id="username"
+              class="form-control"
+              placeholder="Enter username"
+              autocomplete="username"
+              required
+            />
           </div>
+
+          <button id="sendOtpBtn" type="submit" class="btn btn-primary w-100 mt-3" disabled>
+            <i class="fas fa-paper-plane me-1"></i> Send OTP
+          </button>
+
+        </form>
+      </div>
+      <!-- /Step 1 -->
+
+      <!-- ===================== STEP 2: Enter OTP ===================== -->
+      <div id="step2" class="d-none">
+        <form id="verifyOtpForm" novalidate>
+
+          <!-- username carried forward (hidden) -->
+          <input type="hidden" id="usernameForOtp" />
+
+          <div class="mb-3">
+            <label class="form-label">Enter OTP</label>
+            <input
+              type="text"
+              id="otpInput"
+              class="form-control text-center"
+              placeholder="6-digit code"
+              maxlength="6"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              required
+            />
+            <div class="form-text" id="otpHint"></div>
+          </div>
+
+          <button id="verifyOtpBtn" type="submit" class="btn btn-primary w-100 mt-3" disabled>
+            <i class="fas fa-check-circle me-1"></i> Verify OTP
+          </button>
+
+        </form>
+
+        <!-- Resend -->
+        <div class="text-center mt-3">
+          <button class="btn btn-link p-0 small" id="resendBtn" onclick="goBackToStep1()">
+            <i class="fas fa-rotate-left me-1"></i> Resend OTP
+          </button>
         </div>
+      </div>
+      <!-- /Step 2 -->
 
-        <button id="submitBtn" type="submit" class="btn btn-primary w-100 mt-3" disabled>
-          <i class="fas fa-paper-plane me-1"></i> Submit request
-        </button>
-      </form>
+      <!-- ===================== STEP 3: New Password ===================== -->
+      <div id="step3" class="d-none">
+        <form id="resetForm" novalidate>
 
-      <!-- After submit -->
+          <!-- username carried forward (hidden) -->
+          <input type="hidden" id="usernameForReset" />
+
+          <div class="mb-3">
+            <label class="form-label">New Password</label>
+            <input
+              type="password"
+              id="newPassword"
+              class="form-control"
+              placeholder="Enter new password"
+              minlength="8"
+              required
+            />
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Confirm New Password</label>
+            <input
+              type="password"
+              id="confirmNewPassword"
+              class="form-control"
+              placeholder="Re-enter new password"
+              minlength="8"
+              required
+            />
+            <div id="matchError" class="error-text d-none">
+              <i class="fas fa-circle-exclamation"></i> Passwords do not match
+            </div>
+          </div>
+
+          <button id="submitBtn" type="submit" class="btn btn-primary w-100 mt-3" disabled>
+            <i class="fas fa-paper-plane me-1"></i> Reset Password
+          </button>
+
+        </form>
+      </div>
+      <!-- /Step 3 -->
+
+      <!-- ===================== SUCCESS BOX ===================== -->
       <div id="approvalBox" class="approval-box d-none" role="status" aria-live="polite">
         <div class="approval-icon">
-          <i class="fas fa-clock"></i>
+          <i class="fas fa-circle-check"></i>
         </div>
         <div>
-          <div class="approval-title">Request submitted</div>
+          <div class="approval-title">Password reset successfully</div>
           <div class="approval-subtitle" id="responseMsg"></div>
         </div>
       </div>
 
       <div class="auth-links mt-3">
-        <a href="{{ url_for('login') }}" class="auth-link">
+        <a href="{{ url_for('login_page') }}" class="auth-link">
           <i class="fas fa-arrow-left me-1"></i> Back to Login
         </a>
       </div>
@@ -128,7 +175,6 @@
 
     </div>
   </main>
-
 
   <!-- JS -->
   <script src="{{ url_for('static', filename='js/reset.js') }}"></script>
