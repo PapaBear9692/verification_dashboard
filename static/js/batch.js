@@ -14,26 +14,16 @@ document.addEventListener("DOMContentLoaded", () => {
        • Throws   on network / server error (caller handles it).
   ============================================================ */
   async function fetchSecurityCodeCount(lotNumber) {
-    // ── STUB — swap the block below with a real fetch() call ──
-    // Example real implementation:
-    //
-    //   const res = await fetch(`/lot/code-count?lot=${encodeURIComponent(lotNumber)}`, {
-    //     credentials: "same-origin",
-    //   });
-    //   if (res.status === 404) return null;
-    //   if (!res.ok) throw new Error("Server error");
-    //   const data = await res.json();
-    //   return { count: data.count };
-    //
-    // ── Stub data (remove when wiring real API) ──────────────
-    const STUB = {
-      "LOT-001": 500, "LOT-002": 750, "LOT-003": 1000,
-      "LOT-004": 250, "LOT-005": 600,
-    };
-    await new Promise(r => setTimeout(r, 400)); // simulate latency
-    const val = STUB[lotNumber.toUpperCase()];
-    return val !== undefined ? { count: val } : null;
-    // ── End stub ─────────────────────────────────────────────
+    const res = await fetch("/get/lot", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ lotNumber }),
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error("Server error");
+    const data = await res.json();
+    return { count: data.available_codes };
   }
 
   /* ============================================================
@@ -498,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
         hasError = true;
       }
 
-      rows.push({ row: i + 1, lotNumber: lotVal, securityCodes: count ?? 0 });
+      rows.push({ row: i + 1, lotNumber: lotVal });
     });
 
     if (hasError) {
@@ -521,17 +511,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modalBody) {
       modalBody.innerHTML = rows.map((r, i) => `
         <tr>
-          <td>${i + 1}</td>
-          <td><span class="font-monospace">${r.lotNumber}</span></td>
-          <td class="text-end fw-semibold" style="color:var(--brand)">${r.securityCodes.toLocaleString()}</td>
+          <td style="padding:0.45rem 0.8rem; border-bottom:1px solid #f0f1f5; color:#6b7280; font-size:0.82rem;">${i + 1}</td>
+          <td style="padding:0.45rem 0.8rem; border-bottom:1px solid #f0f1f5;"><span class="font-monospace">${r.lotNumber}</span></td>
         </tr>
       `).join("");
     }
 
-    if (modalTotal) {
-      const total = rows.reduce((s, r) => s + r.securityCodes, 0);
-      modalTotal.textContent = total.toLocaleString();
-    }
+    if (modalTotal) modalTotal.textContent = rows.length;
 
     const lotModalEl = document.getElementById("lotAssignConfirmModal");
     if (lotModalEl) {

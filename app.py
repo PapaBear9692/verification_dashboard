@@ -203,55 +203,66 @@ def assign_batch():
 
     data = request.get_json(silent=True) or {}
 
-    brandName    = data.get("brand", "").strip()
-    ProdCode     = data.get("code", "").strip()
+    brand    = data.get("brand", "").strip()
+    code     = data.get("code", "").strip()
     lots     = data.get("lots", [])
     password = data.get("password", "").strip()
 
     created_by = session.get("user_id")
 
     # ── Validate top-level fields ──────────────────────────────
-    if not all([brandName, ProdCode, password, created_by]):
+    if not all([brand, code, password, created_by]):
         return jsonify({"message": "All fields are required"}), 400
 
     if not isinstance(lots, list) or len(lots) == 0:
         return jsonify({"message": "At least one lot must be provided"}), 400
 
     # ── Verify password ────────────────────────────────────────
-    # Will Replace this block with your real password-check logic
-    
+    # Replace this block with your real password-check logic,
+    # e.g. querying the DB for the current user's hashed password.
+    #
+    #   user = db.get_user_by_id(created_by)
+    #   if not check_password_hash(user["password"], password):
+    #       return jsonify({"message": "Incorrect password"}), 403
+    #
+    # ── Stub (remove when wiring real auth) ───────────────────
+    # if password != "correct_password":
+    #     return jsonify({"message": "Incorrect password"}), 403
+
     # ── Validate and normalise each lot row ────────────────────
     normalised_lots = []
     for i, lot in enumerate(lots, start=1):
-        lot_number     = str(lot.get("lotNumber", "")).strip()
-        
+        lot_number = str(lot.get("lotNumber", "")).strip()
+
         if not lot_number:
             return jsonify({"message": f"Row {i}: lot number is missing"}), 400
 
-        normalised_lots.append({
-            "lot_number":     lot_number,
-        })
+        normalised_lots.append(lot_number)
 
     # ── Call DB / business logic for each lot ─────────────────
-    # Will Replace the stub loop below with your real DB call, e.g.:
-    
-    
+    # Replace the stub loop below with your real DB call, e.g.:
+    #
+    #   for lot_number in normalised_lots:
+    #       o_status_code, o_status_msg = db.assign_lot(
+    #           code, brand, lot_number, created_by
+    #       )
+    #       if int(o_status_code) != 1:
+    #           return jsonify({"message": o_status_msg or "Assignment failed"}), 400
+    #
     # ── Stub ──────────────────────────────────────────────────
     o_status_code = 1
     o_status_msg  = "Lot assignment successful"
-    import time; time.sleep(1)  
+    import time; time.sleep(1)  # simulate processing — remove in production
     # ── End stub ──────────────────────────────────────────────
 
     if int(o_status_code) == 1:
-        total_codes = sum(lot["security_codes"] for lot in normalised_lots)
         return jsonify({
             "status_code": 1,
             "message":     o_status_msg,
             "summary": {
-                "product_code": ProdCode,
-                "brand":        brandName,
+                "product_code":  code,
+                "brand":         brand,
                 "lots_assigned": len(normalised_lots),
-                "total_security_codes": total_codes,
             }
         }), 200
 
@@ -260,6 +271,56 @@ def assign_batch():
         "message":     o_status_msg or "Lot assignment failed",
     }), 400
 
+
+@app.route('/get/lot', methods=['POST'])
+def get_lot():
+    if not session.get("login"):
+        return jsonify({"message": "Unauthorized"}), 401
+
+    data       = request.get_json(silent=True) or {}
+    lot_number = data.get("lotNumber", "").strip()
+
+    if not lot_number:
+        return jsonify({"message": "Lot number is required"}), 400
+
+    # ── DB call ───────────────────────────────────────────────
+    # Replace this block with your real query, e.g.:
+    #
+    #   result = db.get_lot_code_count(lot_number)
+    #
+    # Your DB function should:
+    #   • Look up the lot by lot_number
+    #   • Return the count of available (unassigned) security codes
+    #   • Return None / raise if the lot does not exist
+    #
+    # Expected return shape from db layer:
+    #   result = {
+    #       "lot_number":        "LOT-001",
+    #       "available_codes":   500,       # unassigned codes remaining
+    #   }
+    #   or None if not found.
+    #
+    # ── Stub (remove when wiring real DB) ────────────────────
+    STUB_DB = {
+        "LOT-001": 500,
+        "LOT-002": 750,
+        "LOT-003": 1000,
+        "LOT-004": 250,
+        "LOT-005": 600,
+    }
+    import time; time.sleep(0.3)   # simulate DB latency — remove in production
+
+    raw = STUB_DB.get(lot_number.upper())
+    result = {"lot_number": lot_number.upper(), "available_codes": raw} if raw is not None else None
+    # ── End stub ──────────────────────────────────────────────
+
+    if result is None:
+        return jsonify({"message": f"Lot '{lot_number}' not found"}), 404
+
+    return jsonify({
+        "lot_number":      result["lot_number"],
+        "available_codes": int(result["available_codes"]),
+    }), 200
 
 
 
