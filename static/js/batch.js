@@ -3,20 +3,38 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   /* ============================================================
-     LOT NUMBER → SECURITY CODES LOOKUP MAP
-     Lot numbers are globally unique — independent of product.
-     Keys are matched case-insensitively and trimmed.
-     ── Add / edit entries here as new lots are registered ──
+     LOT LOOKUP — async stub.
+     Replace the body of fetchSecurityCodeCount() with your
+     real API call when the backend is ready.
+
+     Contract:
+       • Receives a trimmed, upper-cased lot number string.
+       • Returns  { count: <number> }   on success.
+       • Returns  null                  when the lot is not found.
+       • Throws   on network / server error (caller handles it).
   ============================================================ */
-  const LOT_CODE_MAP = {
-    "LOT-001": 500,
-    "LOT-002": 750,
-    "LOT-003": 1000,
-    "LOT-004": 250,
-    "LOT-005": 600,
-    // Add more lots:
-    // "LOT-XXX": <security code count>,
-  };
+  async function fetchSecurityCodeCount(lotNumber) {
+    // ── STUB — swap the block below with a real fetch() call ──
+    // Example real implementation:
+    //
+    //   const res = await fetch(`/lot/code-count?lot=${encodeURIComponent(lotNumber)}`, {
+    //     credentials: "same-origin",
+    //   });
+    //   if (res.status === 404) return null;
+    //   if (!res.ok) throw new Error("Server error");
+    //   const data = await res.json();
+    //   return { count: data.count };
+    //
+    // ── Stub data (remove when wiring real API) ──────────────
+    const STUB = {
+      "LOT-001": 500, "LOT-002": 750, "LOT-003": 1000,
+      "LOT-004": 250, "LOT-005": 600,
+    };
+    await new Promise(r => setTimeout(r, 400)); // simulate latency
+    const val = STUB[lotNumber.toUpperCase()];
+    return val !== undefined ? { count: val } : null;
+    // ── End stub ─────────────────────────────────────────────
+  }
 
   /* ============================================================
      ELEMENTS — all resolved safely; null is expected on pages
@@ -31,141 +49,207 @@ document.addEventListener("DOMContentLoaded", () => {
   const brandInput  = document.getElementById("brandInput");
   const codeInput   = document.getElementById("codeInput");
 
-  // ── Lot Assignment (register page only) ────────────────────
-  const LOT_ROWS = [
-    { lot: document.getElementById("lotInput1"), count: document.getElementById("secCodeCount1") },
-    { lot: document.getElementById("lotInput2"), count: document.getElementById("secCodeCount2") },
-    { lot: document.getElementById("lotInput3"), count: document.getElementById("secCodeCount3") },
-  ];
+  /* ============================================================
+     LOT ASSIGNMENT TABLE
+     • One editable column (Lot Number) — user types here.
+     • One readonly column (Security Codes) — filled async.
+     • New row appears automatically when the last row gets input.
+     • tfoot shows the running total.
+  ============================================================ */
 
-  // ── Live total of security codes ───────────────────────────
-  // Reads all rendered count inputs dynamically (supports added rows)
+  // Per-row debounce timers
+  const _lotDebounceTimers = {};
+  // Per-row cached counts  { rowId: number | null }
+  const _lotCountCache     = {};
+  let   _lotRowCounter     = 0;
+
+  const lotTableBody = document.getElementById("lotTableBody");
+
+  // ── Helpers ────────────────────────────────────────────────
+
   function updateSecCodeTotal() {
-    const container = document.getElementById("lotRowsContainer");
-    if (!container) return;
-    const total = Array.from(container.querySelectorAll(".sec-code-count-input"))
-      .reduce((sum, el) => {
-        const v = Number(el.value);
-        return sum + (isNaN(v) || v < 0 ? 0 : v);
-      }, 0);
     const display = document.getElementById("totalSecCodes");
-    if (display) display.textContent = total.toLocaleString();
+    if (!display) return;
+    let total = 0;
+    Object.values(_lotCountCache).forEach(v => {
+      if (typeof v === "number" && v > 0) total += v;
+    });
+    display.textContent = total.toLocaleString();
   }
 
-  // Count inputs are readonly — users cannot type in them.
-  // updateSecCodeTotal() is called directly inside lookupAndFill() after each
-  // auto-fill so no input listener on count inputs is actually needed.
-  // attachCountListener is kept as a no-op shim so addLotRow() still compiles
-  // cleanly if the design ever changes to allow manual entry.
-  function attachCountListener(countEl) { /* readonly — wired via lookupAndFill */ }
-
-  // Lookup lot number in the flat map and auto-fill the paired count input
-  function lookupAndFill(lotEl, countEl) {
-    if (!lotEl || !countEl) return;
-
-    const lotKey = lotEl.value.trim().toUpperCase();
-    const match  = Object.keys(LOT_CODE_MAP).find(k => k.toUpperCase() === lotKey);
-
-    if (match) {
-      countEl.value = LOT_CODE_MAP[match];
-      countEl.classList.remove("is-invalid", "field-no-match");
-      countEl.classList.add("is-valid");
-    } else {
-      countEl.value = "";
-      if (lotKey.length > 0) {
-        countEl.classList.add("field-no-match");
-        countEl.classList.remove("is-valid", "is-invalid");
-      } else {
-        countEl.classList.remove("field-no-match", "is-valid", "is-invalid");
-      }
+  function _setCodeCell(td, state, value) {
+    // state: "empty" | "loading" | "found" | "not-found"
+    td.className = "lot-code-cell " + (state === "found" ? "" : state);
+    switch (state) {
+      case "empty":
+        td.innerHTML = `<span class="sec-code-display text-muted" style="font-size:0.82rem">—</span>`;
+        break;
+      case "loading":
+        td.innerHTML = `<span class="sec-code-display"></span>`;
+        break;
+      case "found":
+        td.innerHTML = `<span class="sec-code-display">${Number(value).toLocaleString()}</span>`;
+        break;
+      case "not-found":
+        td.innerHTML = `<span class="sec-code-display">Not found</span>`;
+        break;
     }
-    updateSecCodeTotal();
   }
 
-  // Re-run all lot lookups (e.g. called when brand/code change — kept as no-op guard)
-  function refreshAllLotLookups() {
-    const container = document.getElementById("lotRowsContainer");
-    if (!container) return;
-    const lotInputs   = container.querySelectorAll("input[id^='lotInput']");
-    const countInputs = container.querySelectorAll(".sec-code-count-input");
-    lotInputs.forEach((lot, i) => lookupAndFill(lot, countInputs[i]));
+  function _isLastRow(rowId) {
+    if (!lotTableBody) return false;
+    const rows = lotTableBody.querySelectorAll("tr[data-lot-row-id]");
+    return rows.length > 0 && rows[rows.length - 1].dataset.lotRowId === String(rowId);
   }
 
-  // Wire lot-input → auto-fill on a row (works for static + dynamic rows)
-  function attachLotListener(lotEl, countEl) {
-    if (!lotEl) return;
-    lotEl.addEventListener("input", () => lookupAndFill(lotEl, countEl));
-  }
+  // ── Core: create one table row ──────────────────────────────
 
-  // Attach to 3 static rows
-  LOT_ROWS.forEach(({ lot, count }) => attachLotListener(lot, count));
+  function _createLotTableRow({ autoFocus = true } = {}) {
+    if (!lotTableBody) return;
+    _lotRowCounter++;
+    const id = _lotRowCounter;
+    _lotCountCache[id] = null;
 
-  // ── Add Row ─────────────────────────────────────────────────
-  let dynamicRowIndex = LOT_ROWS.length; // starts at 3
+    const tr = document.createElement("tr");
+    tr.dataset.lotRowId = id;
+    tr.classList.add("lot-row-new");
 
-  window.addLotRow = function () {
-    const container = document.getElementById("lotRowsContainer");
-    if (!container) return;
-
-    dynamicRowIndex++;
-    const idx = dynamicRowIndex;
-
-    const rowDiv = document.createElement("div");
-    rowDiv.className = "row g-2 mb-3 justify-content-center dynamic-lot-row";
-    rowDiv.dataset.rowIndex = idx;
-
-    rowDiv.innerHTML = `
-      <div class="col-md-3">
-        <label class="form-label">
-          Lot Number <span class="text-danger">*</span>
-        </label>
-        <input type="text" class="form-control lot-input"
-               id="lotInput${idx}" placeholder="e.g. LOT-00${idx}" required>
-        <div class="invalid-feedback">Please enter a valid lot number.</div>
-        <div class="valid-feedback">Looks good!</div>
-      </div>
-      <div class="col-md-3">
-        <div class="d-flex align-items-end gap-2">
-          <div class="flex-grow-1">
-            <label class="form-label">
-              Number of Security Codes <span class="text-danger">*</span>
-            </label>
-            <input type="number" class="form-control sec-code-count-input lot-code-result"
-                   id="secCodeCount${idx}"
-                   placeholder="Auto-filled from lot number"
-                   readonly tabindex="-1">
-            <div class="invalid-feedback">Please enter a positive number.</div>
-            <div class="valid-feedback">Looks good!</div>
-          </div>
-          <button type="button"
-                  class="btn btn-remove-row mb-0"
-                  onclick="removeLotRow(this)"
-                  title="Remove row">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
+    tr.innerHTML = `
+      <td><span class="lot-row-num">${id}</span></td>
+      <td>
+        <input type="text"
+               class="form-control lot-input"
+               id="lotInput${id}"
+               placeholder="e.g. LOT-${String(id).padStart(3, "0")}"
+               autocomplete="off">
+      </td>
+      <td class="lot-code-cell empty" id="lotCodeCell${id}">
+        <span class="sec-code-display">—</span>
+      </td>
+      <td>
+        <button type="button"
+                class="btn-del-lot-row"
+                title="Remove row"
+                data-del-row="${id}">
+          <i class="fas fa-times"></i>
+        </button>
+      </td>
     `;
 
-    container.appendChild(rowDiv);
+    lotTableBody.appendChild(tr);
 
-    // Wire up live total + lookup listeners on the new row
-    const newCountEl = rowDiv.querySelector(".sec-code-count-input");
-    const newLotEl   = rowDiv.querySelector(".lot-input");
-    attachCountListener(newCountEl);
-    attachLotListener(newLotEl, newCountEl);
+    // Wire input event
+    const lotInput = tr.querySelector(`#lotInput${id}`);
+    lotInput.addEventListener("input", () => _onLotInput(id));
+    lotInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); _focusNextEmptyLot(id); }
+    });
 
-    // Focus the new lot input for convenience
-    rowDiv.querySelector(".lot-input")?.focus();
-  };
+    // Wire delete button
+    tr.querySelector(`[data-del-row="${id}"]`).addEventListener("click", () => _deleteLotRow(id));
 
-  window.removeLotRow = function (btn) {
-    const row = btn.closest(".dynamic-lot-row");
-    if (row) {
-      row.remove();
+    // Focus the new row's input only when explicitly requested
+    if (autoFocus) setTimeout(() => lotInput.focus(), 40);
+  }
+
+  // ── Input handler (debounced async lookup) ──────────────────
+
+  async function _onLotInput(rowId) {
+    const lotInput = document.getElementById(`lotInput${rowId}`);
+    const codeCell = document.getElementById(`lotCodeCell${rowId}`);
+    if (!lotInput || !codeCell) return;
+
+    const raw = lotInput.value.trim();
+
+    // If empty, reset
+    if (!raw) {
+      _setCodeCell(codeCell, "empty", null);
+      _lotCountCache[rowId] = null;
+      lotInput.classList.remove("is-valid", "is-invalid", "field-no-match");
       updateSecCodeTotal();
+      return;
     }
-  };
+
+    // Debounce lookup — new row is only added AFTER a confirmed valid result
+    clearTimeout(_lotDebounceTimers[rowId]);
+    _setCodeCell(codeCell, "loading", null);
+
+    _lotDebounceTimers[rowId] = setTimeout(async () => {
+      try {
+        const result = await fetchSecurityCodeCount(raw);
+        if (result && typeof result.count === "number") {
+          _lotCountCache[rowId] = result.count;
+          _setCodeCell(codeCell, "found", result.count);
+          lotInput.classList.remove("is-invalid", "field-no-match");
+          lotInput.classList.add("is-valid");
+          // Only now, if this is the last row, silently append a new empty row
+          // without stealing focus from the current row
+          if (_isLastRow(rowId)) _createLotTableRow({ autoFocus: false });
+        } else {
+          _lotCountCache[rowId] = null;
+          _setCodeCell(codeCell, "not-found", null);
+          lotInput.classList.add("field-no-match");
+          lotInput.classList.remove("is-valid", "is-invalid");
+        }
+      } catch (_err) {
+        _lotCountCache[rowId] = null;
+        _setCodeCell(codeCell, "not-found", null);
+      }
+      updateSecCodeTotal();
+    }, 450);
+  }
+
+  // ── Delete a row ─────────────────────────────────────────────
+
+  function _deleteLotRow(rowId) {
+    const tbody = lotTableBody;
+    if (!tbody) return;
+    const rows = tbody.querySelectorAll("tr[data-lot-row-id]");
+    if (rows.length <= 1) {
+      // Last row — just clear it
+      const lotInput = document.getElementById(`lotInput${rowId}`);
+      const codeCell = document.getElementById(`lotCodeCell${rowId}`);
+      if (lotInput) { lotInput.value = ""; lotInput.className = "form-control lot-input"; }
+      if (codeCell) _setCodeCell(codeCell, "empty", null);
+      _lotCountCache[rowId] = null;
+      updateSecCodeTotal();
+      return;
+    }
+    const tr = tbody.querySelector(`tr[data-lot-row-id="${rowId}"]`);
+    if (tr) {
+      tr.style.transition = "opacity 0.18s";
+      tr.style.opacity    = "0";
+      setTimeout(() => {
+        tr.remove();
+        delete _lotCountCache[rowId];
+        clearTimeout(_lotDebounceTimers[rowId]);
+        updateSecCodeTotal();
+      }, 180);
+    }
+  }
+
+  // ── Focus helpers ────────────────────────────────────────────
+
+  function _focusNextEmptyLot(currentRowId) {
+    if (!lotTableBody) return;
+    const rows = Array.from(lotTableBody.querySelectorAll("tr[data-lot-row-id]"));
+    const ci   = rows.findIndex(r => r.dataset.lotRowId === String(currentRowId));
+    for (let i = ci + 1; i < rows.length; i++) {
+      const inp = rows[i].querySelector(".lot-input");
+      if (inp && !inp.value.trim()) { inp.focus(); return; }
+    }
+  }
+
+  // ── Initialise with one empty row ────────────────────────────
+  if (lotTableBody) _createLotTableRow();
+
+  // ── Keep these aliases so existing resetLotForm / submitLotAssignment still work ──
+
+  // refreshAllLotLookups is a no-op alias (lookups now fire on input)
+  function refreshAllLotLookups() {}
+
+  // dynamicRowIndex kept so resetLotForm resets it cleanly
+  let dynamicRowIndex = 0;
 
   // ── Batch forms (batch page only) ──────────────────────────
   const createForm = document.getElementById("createBatchForm");
@@ -220,6 +304,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.scrollToTop = function () {
     window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  window.toggleLotConfirmPasswordVisibility = function () {
+    const input = document.getElementById("lotConfirmPassword");
+    const icon  = document.getElementById("lotConfirmPasswordEyeIcon");
+    if (!input) return;
+    const isHidden = input.type === "password";
+    input.type     = isHidden ? "text" : "password";
+    if (icon) {
+      icon.classList.toggle("fa-eye",      !isHidden);
+      icon.classList.toggle("fa-eye-slash", isHidden);
+    }
   };
 
   /* ----------------------------------------------------------
@@ -328,20 +424,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const lotForm = document.getElementById("lotAssignForm");
     if (!lotForm) return;
     lotForm.reset();
-    // Clear all validation states including amber no-match style
     lotForm.querySelectorAll(".is-invalid, .is-valid, .field-no-match").forEach((el) => {
       el.classList.remove("is-invalid", "is-valid", "field-no-match");
     });
-    // Remove any dynamically added rows
-    const container = document.getElementById("lotRowsContainer");
-    if (container) {
-      container.querySelectorAll(".dynamic-lot-row").forEach(r => r.remove());
-    }
-    dynamicRowIndex = LOT_ROWS.length; // reset counter back to 3
-
-    // Reset the live total back to 0
-    const totalEl = document.getElementById("totalSecCodes");
-    if (totalEl) totalEl.textContent = "0";
+    // Clear all table rows and reset to one fresh empty row
+    if (lotTableBody) lotTableBody.innerHTML = "";
+    Object.keys(_lotCountCache).forEach(k => delete _lotCountCache[k]);
+    Object.keys(_lotDebounceTimers).forEach(k => clearTimeout(_lotDebounceTimers[k]));
+    _lotRowCounter = 0;
+    dynamicRowIndex = 0;
+    _createLotTableRow();
+    updateSecCodeTotal();
   };
 
   // resetForm kept as alias so any legacy onclick="resetForm()" still works
@@ -378,45 +471,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // ── Validate Lot rows ──
     const rows = [];
 
-    // Collect ALL rows — static (LOT_ROWS) + any dynamically added ones
-    const container = document.getElementById("lotRowsContainer");
-    const allLotInputs   = container
-      ? Array.from(container.querySelectorAll("input[id^='lotInput']"))
-      : LOT_ROWS.map(r => r.lot).filter(Boolean);
-    const allCountInputs = container
-      ? Array.from(container.querySelectorAll(".sec-code-count-input, input[id^='secCodeCount']"))
-      : LOT_ROWS.map(r => r.count).filter(Boolean);
+    // Collect all table rows
+    const allLotRows = lotTableBody
+      ? Array.from(lotTableBody.querySelectorAll("tr[data-lot-row-id]"))
+      : [];
 
-    // De-duplicate (static rows have both a class match and id match)
-    const uniqueCounts = [...new Set(allCountInputs)];
-    const uniqueLots   = [...new Set(allLotInputs)];
+    allLotRows.forEach((tr, i) => {
+      const rowId    = tr.dataset.lotRowId;
+      const lotInput = tr.querySelector(".lot-input");
+      const lotVal   = lotInput?.value.trim() ?? "";
+      const count    = _lotCountCache[rowId];
 
-    uniqueLots.forEach((lot, idx) => {
-      const count    = uniqueCounts[idx];
-      const lotVal   = lot?.value.trim()   ?? "";
-      const countVal = count?.value.trim() ?? "";
-      const countNum = Number(countVal);
+      // Skip completely empty trailing rows (auto-added blank row)
+      if (!lotVal && count === null) return;
 
       if (!lotVal || lotVal.length < 2) {
-        lot?.classList.add("is-invalid");
-        lot?.classList.remove("is-valid");
+        lotInput?.classList.add("is-invalid");
+        lotInput?.classList.remove("is-valid");
         hasError = true;
       } else {
-        lot?.classList.remove("is-invalid");
-        lot?.classList.add("is-valid");
+        lotInput?.classList.remove("is-invalid");
+        lotInput?.classList.add("is-valid");
       }
 
-      // count is auto-filled from map; if empty the lot number wasn't found
-      if (!countVal || isNaN(countNum) || countNum < 1) {
-        count?.classList.add("is-invalid");
-        count?.classList.remove("is-valid", "field-no-match");
+      if (!count || isNaN(count) || count < 1) {
         hasError = true;
-      } else {
-        count?.classList.remove("is-invalid", "field-no-match");
-        count?.classList.add("is-valid");
       }
 
-      rows.push({ row: idx + 1, lotNumber: lotVal, securityCodes: countNum });
+      rows.push({ row: i + 1, lotNumber: lotVal, securityCodes: count ?? 0 });
     });
 
     if (hasError) {
@@ -424,15 +506,74 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const submitBtn = lotForm.querySelector(".btn-primary");
-    setBtnLoading(submitBtn, true, "Submitting...");
+    // ── All valid — store payload and open confirmation modal ──
+    _pendingLotPayload = { brand, code, lots: rows };
+
+    // Populate modal summary
+    const modalCode  = document.getElementById("lotConfirmCode");
+    const modalBrand = document.getElementById("lotConfirmBrand");
+    const modalBody  = document.getElementById("lotConfirmTableBody");
+    const modalTotal = document.getElementById("lotConfirmTotal");
+
+    if (modalCode)  modalCode.textContent  = code;
+    if (modalBrand) modalBrand.textContent = brand;
+
+    if (modalBody) {
+      modalBody.innerHTML = rows.map((r, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><span class="font-monospace">${r.lotNumber}</span></td>
+          <td class="text-end fw-semibold" style="color:var(--brand)">${r.securityCodes.toLocaleString()}</td>
+        </tr>
+      `).join("");
+    }
+
+    if (modalTotal) {
+      const total = rows.reduce((s, r) => s + r.securityCodes, 0);
+      modalTotal.textContent = total.toLocaleString();
+    }
+
+    const lotModalEl = document.getElementById("lotAssignConfirmModal");
+    if (lotModalEl) {
+      // Clear password + error state each time modal opens
+      const pwInput = document.getElementById("lotConfirmPassword");
+      const pwError = document.getElementById("lotConfirmPasswordError");
+      if (pwInput) { pwInput.value = ""; pwInput.classList.remove("is-invalid"); }
+      if (pwError) pwError.style.display = "none";
+      bootstrap.Modal.getOrCreateInstance(lotModalEl).show();
+    }
+  };
+
+  // Pending payload between modal open → confirm click
+  let _pendingLotPayload = null;
+
+  window.confirmLotAssignment = async function () {
+    if (!_pendingLotPayload) return;
+
+    // Validate password field
+    const pwInput = document.getElementById("lotConfirmPassword");
+    const pwError = document.getElementById("lotConfirmPasswordError");
+    const password = pwInput?.value ?? "";
+
+    if (!password) {
+      if (pwInput) pwInput.classList.add("is-invalid");
+      if (pwError) pwError.style.display = "block";
+      pwInput?.focus();
+      return;
+    }
+    if (pwInput) pwInput.classList.remove("is-invalid");
+    if (pwError) pwError.style.display = "none";
+
+    const lotModalEl = document.getElementById("lotAssignConfirmModal");
+    const confirmBtn = document.getElementById("lotConfirmSubmitBtn");
+    setBtnLoading(confirmBtn, true, "Submitting…");
 
     try {
-      const response = await fetch("/lot/assign", {
+      const response = await fetch("/batch/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        body: JSON.stringify({ brand, code, lots: rows }),
+        body: JSON.stringify({ ..._pendingLotPayload, password }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -442,13 +583,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      if (lotModalEl) bootstrap.Modal.getOrCreateInstance(lotModalEl).hide();
+      _pendingLotPayload = null;
       window.resetLotForm();
-      showToast(data.message || "Assignment submitted successfully.", "success");
+      showToast(data.message || "Lot assignment submitted successfully.", "success");
 
     } catch {
       showToast("Server unavailable. Please try again.", "error");
     } finally {
-      setBtnLoading(submitBtn, false, '<i class="fas fa-check-circle me-1"></i> Submit Assignment');
+      setBtnLoading(confirmBtn, false, '<i class="fas fa-check-circle me-1"></i> Confirm & Submit');
     }
   };
 

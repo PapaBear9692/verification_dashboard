@@ -494,3 +494,159 @@ img {
     width: 100%;
   }
 }
+
+/* ── Lot Assignment Table ───────────────────────────────── */
+.lot-assign-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.65rem;
+  overflow: hidden;
+  font-size: 0.875rem;
+}
+
+.lot-assign-table thead tr {
+  background: #f9fafb;
+}
+
+.lot-assign-table thead th {
+  padding: 0.6rem 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.lot-assign-table thead th:first-child { width: 3rem; }
+.lot-assign-table thead th:nth-child(2) { width: 45%; }
+.lot-assign-table thead th:nth-child(3) { width: 40%; }
+.lot-assign-table thead th:last-child   { width: 3rem; }
+
+.lot-assign-table tbody tr {
+  transition: background 0.14s;
+}
+
+.lot-assign-table tbody tr:hover {
+  background: var(--brand-soft);
+}
+
+.lot-assign-table tbody td {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.lot-assign-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.lot-row-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* Lot input inside table */
+.lot-assign-table .form-control {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.875rem;
+}
+
+/* Security-code readonly cell */
+.lot-code-cell {
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 5rem;
+}
+
+.lot-code-cell .sec-code-display {
+  display: inline-block;
+  min-width: 4rem;
+}
+
+.lot-code-cell.loading .sec-code-display::after {
+  content: "";
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #d1fae5;
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: lot-spin 0.55s linear infinite;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+@keyframes lot-spin { to { transform: rotate(360deg); } }
+
+.lot-code-cell.not-found .sec-code-display {
+  color: #dc2626;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.lot-code-cell.empty .sec-code-display {
+  color: #d1d5db;
+  font-weight: 400;
+  font-size: 0.82rem;
+}
+
+/* Delete row button */
+.btn-del-lot-row {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  padding: 0.2rem 0.45rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.btn-del-lot-row:hover {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+/* Total row */
+.lot-table-total-row td {
+  background: #f9fafb;
+  border-top: 2px solid var(--border-subtle) !important;
+  padding: 0.55rem 0.9rem;
+}
+
+.lot-total-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.lot-total-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+/* Fade-in for new rows */
+@keyframes lot-row-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lot-assign-table tbody tr.lot-row-new {
+  animation: lot-row-in 0.2s ease forwards;
+}

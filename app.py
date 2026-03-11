@@ -196,53 +196,70 @@ def batch():
 
 
 
-@app.route('/batch', methods=['POST'])
+@app.route('/batch/assign', methods=['POST'])
 def assign_batch():
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401
 
     data = request.get_json(silent=True) or {}
 
-    p_prod_id = data.get("P_PROD_ID")
-    p_generic = data.get("P_GENERIC")
-    p_prod_name = data.get("P_PROD_NAME")
-    p_batch = data.get("P_BATCH")
-    p_mnf_date = data.get("P_MNF_DATE")   # "YYYY-MM-DD"
-    p_exp_date = data.get("P_EXP_DATE")   # "YYYY-MM-DD"
-    p_batch_size = data.get("P_BATCH_SIZE")
-    p_uom = data.get("P_UOM")
-    p_lot_no = data.get("P_LOT_NO")
+    brandName    = data.get("brand", "").strip()
+    ProdCode     = data.get("code", "").strip()
+    lots     = data.get("lots", [])
+    password = data.get("password", "").strip()
+
     created_by = session.get("user_id")
 
-    # Validate required fields
-    if not all([p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom, p_lot_no, created_by]):
+    # ── Validate top-level fields ──────────────────────────────
+    if not all([brandName, ProdCode, password, created_by]):
         return jsonify({"message": "All fields are required"}), 400
 
-    # Optional: normalize numbers (safely)
-    try:
-        p_prod_id = int(p_prod_id) # type: ignore
-        p_batch_size = int(p_batch_size) # type: ignore
-        p_lot_no = int(p_lot_no) # type: ignore
-        p_mnf_date = datetime.strptime(p_mnf_date, "%Y-%m-%d").date() # type: ignore
-        p_exp_date = datetime.strptime(p_exp_date, "%Y-%m-%d").date() # type: ignore
-    except (TypeError, ValueError):
-        return jsonify({"message": "PRODUCT_ID, BATCH_SIZE and LOT_NO must be numbers"}), 400
+    if not isinstance(lots, list) or len(lots) == 0:
+        return jsonify({"message": "At least one lot must be provided"}), 400
 
-    #o_status_code, o_status_msg = db.assign_batch(p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom, created_by, p_lot_no)
+    # ── Verify password ────────────────────────────────────────
+    # Will Replace this block with your real password-check logic
+    
+    # ── Validate and normalise each lot row ────────────────────
+    normalised_lots = []
+    for i, lot in enumerate(lots, start=1):
+        lot_number     = str(lot.get("lotNumber", "")).strip()
+        
+        if not lot_number:
+            return jsonify({"message": f"Row {i}: lot number is missing"}), 400
+
+        normalised_lots.append({
+            "lot_number":     lot_number,
+        })
+
+    # ── Call DB / business logic for each lot ─────────────────
+    # Will Replace the stub loop below with your real DB call, e.g.:
+    
+    
+    # ── Stub ──────────────────────────────────────────────────
     o_status_code = 1
-    o_status_msg = "Batch created successfully"
-    time.sleep(2)  # Simulate processing time
-    # DB contract: 1 == success, 0 == failed
+    o_status_msg  = "Lot assignment successful"
+    import time; time.sleep(1)  
+    # ── End stub ──────────────────────────────────────────────
+
     if int(o_status_code) == 1:
+        total_codes = sum(lot["security_codes"] for lot in normalised_lots)
         return jsonify({
-            "status_code": int(o_status_code),
-            "message": o_status_msg or f"Batch {p_batch} created successfully"
+            "status_code": 1,
+            "message":     o_status_msg,
+            "summary": {
+                "product_code": ProdCode,
+                "brand":        brandName,
+                "lots_assigned": len(normalised_lots),
+                "total_security_codes": total_codes,
+            }
         }), 200
 
     return jsonify({
         "status_code": int(o_status_code) if o_status_code is not None else 0,
-        "message": o_status_msg or "Batch creation failed"
+        "message":     o_status_msg or "Lot assignment failed",
     }), 400
+
 
 
 
