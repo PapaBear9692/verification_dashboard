@@ -82,250 +82,192 @@
   </nav>
   <!-- /Navigation Bar -->
 
-  <!-- Create Batch Section -->
+
+  <!-- ASSIGN LOT & SECURITY CODES SECTION -->
   <section class="mb-5 mt-4">
     <div class="container">
 
-      <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-layer-group me-2"></i>Create Batch
-        </h2>
-      </div>
-
-      <div class="card shadow-sm border-0">
-        <div class="card-body">
-
-          <form id="createBatchForm">
-
-            <div class="row g-3">
-
-              <!-- Product ID -->
-              <div class="col-md-6">
-                <label class="form-label" for="prodIdInput">Product ID</label>
-                <input
-                  id="prodIdInput"
-                  type="number"
-                  class="form-control"
-                  name="prodId"
-                  placeholder="e.g. 1001"
-                  min="1"
-                  required
-                />
-              </div>
-
-              <!-- Generic -->
-              <div class="col-md-6">
-                <label class="form-label" for="genericInput">Generic Name</label>
-                <input
-                  id="genericInput"
-                  type="text"
-                  class="form-control"
-                  name="generic"
-                  placeholder="e.g. Paracetamol"
-                  required
-                />
-              </div>
-
-              <!-- Product Name -->
-              <div class="col-md-6">
-                <label class="form-label" for="prodNameInput">Product Name</label>
-                <input
-                  id="prodNameInput"
-                  type="text"
-                  class="form-control"
-                  name="prodName"
-                  placeholder="e.g. Ace 500mg"
-                  required
-                />
-              </div>
-
-              <!-- Batch -->
-              <div class="col-md-6">
-                <label class="form-label" for="batchInput">Batch Number</label>
-                <input
-                  id="batchInput"
-                  type="text"
-                  class="form-control"
-                  name="batch"
-                  placeholder="e.g. BATCH-2026-001"
-                  required
-                />
-              </div>
-
-              <!-- Manufacturing Date -->
-              <div class="col-md-6">
-                <label class="form-label" for="mnfDateInput">Manufacturing Date</label>
-                <input
-                  id="mnfDateInput"
-                  type="date"
-                  class="form-control"
-                  name="mnfDate"
-                  required
-                />
-              </div>
-
-              <!-- Expiry Date -->
-              <div class="col-md-6">
-                <label class="form-label" for="expDateInput">Expiry Date</label>
-                <input
-                  id="expDateInput"
-                  type="date"
-                  class="form-control"
-                  name="expDate"
-                  required
-                />
-              </div>
-
-              <!-- Batch Size -->
-              <div class="col-md-6">
-                <label class="form-label" for="batchSizeInput">Batch Size</label>
-                <input
-                  id="batchSizeInput"
-                  type="number"
-                  class="form-control"
-                  name="batchSize"
-                  placeholder="e.g. 50000"
-                  min="1"
-                  required
-                />
-              </div>
-
-              <div class="col-md-6">
-                <label class="form-label" for="lotNoInput">Lot Number</label>
-                <input
-                  id="lotNoInput"
-                  type="text"
-                  class="form-control"
-                  name="lotNo"
-                  placeholder="e.g. LOT-2026-001"
-                  required
-                />
-              </div>
-
-              <!-- UOM -->
-              <div class="col-md-6">
-                <label class="form-label" for="uomInput">Unit Of Mesurement</label>
-                <input
-                  id="uomInput"
-                  type="text"
-                  class="form-control"
-                  name="uom"
-                  placeholder="e.g. TAB, PCS, BOX"
-                  required
-                />
-              </div>
-
-            </div>
-
-            <!-- Actions -->
-            <div class="d-flex justify-content-between align-items-center mt-4">
-              <!-- Reset Button (Left side) -->
-              <button
-                id="resetBatchBtn"
-                type="button"
-                class="btn btn-outline-secondary"
-                onclick="resetCreateBatchForm()"
-              >
-                Reset
-              </button>
-
-              <!-- Create Batch Button (Right side) -->
-              <button
-                id="createBatchBtn"
-                type="button"
-                class="btn btn-primary"
-                onclick="openBatchConfirmation()"
-              ><i class="fas fa-layer-group me-2"></i>
-                Create Batch
-              </button>
-            </div>
-
-          </form>
-
-        </div>
-      </div>
-
-    </div>
-  </section>
-  <!-- /Create Batch Section -->
-
-  <!-- Export Batch Section -->
-  <section class="section-block">
-    <div class="container">
-
-      <div class="section-header d-flex justify-content-between align-items-center mb-3">
-        <h2 class="section-title mb-0">
-          <i class="fas fa-file-export me-1"></i>Export Batch Data
+      <div class="section-header mb-3">
+        <h2 class="section-title">
+          <i class="fas fa-layer-group me-2"></i>Assign Lot &amp; Security Codes
         </h2>
       </div>
 
       <div class="card-box">
+        <form id="lotAssignForm">
 
-        <form id="exportBatchForm">
-          <div class="row g-3 align-items-end">
-
-            <!-- Batch Input -->
-            <div class="col-md-4">
-              <label class="form-label" for="exportBatchInput">Batch Number</label>
-              <input
-                id="exportBatchInput"
-                type="text"
-                class="form-control"
-                name="exportBatch"
-                placeholder="Enter batch number, e.g. 2026-001"
-                required
-              />
+          <!-- Row 0: Product info -->
+          <!-- Product ID -->
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <label class="form-label">Product Code <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="codeInput"
+                     placeholder="e.g. ACE500" required>
+              <div class="invalid-feedback">Please enter a valid product code (at least 2 characters).</div>
+              <div class="valid-feedback">Looks good!</div>
             </div>
-
-            <!-- Export Type -->
-            <div class="col-md-4">
-              <label class="form-label" for="exportTypeSelect">Export Content</label>
-              <select class="form-select" name="exportType" id="exportTypeSelect" required>
-                <option value="codes">Codes only</option>
-                <option value="both">Summary + Codes</option>
-                <option value="summary">Summary only</option>
-              </select>
+          </div>
+          <!-- Product Name -->
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <label class="form-label">Product Brand Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="brandInput"
+                     placeholder="e.g. Ace" required>
+              <div class="invalid-feedback">Please enter a valid brand name (at least 2 characters).</div>
+              <div class="valid-feedback">Looks good!</div>
             </div>
-
-            <!-- Export Format -->
-            <div class="col-md-4">
-              <label class="form-label" for="exportFormatSelect">File Format</label>
-              <select class="form-select" name="exportFormat" id="exportFormatSelect" required>
-                <option value="pdf">PDF</option>
-                <option value="csv">CSV</option>
-              </select>
-            </div>
-
           </div>
 
-          <!-- Actions -->
-          <div class="d-flex justify-content-end mt-4 gap-2">
-            <button 
-              id="resetExportBtn"
-              type="button"
-              class="btn btn-outline-secondary"
-              onclick="resetExportForm()"
-            >
+          <!-- Lot Rows Container -->
+          <div id="lotRowsContainer" style="margin-top: 50px;">
+
+          <div class="lot-rows-heading mb-3">
+            <h6 class="lot-rows-label">
+              <i class="fas fa-layer-group me-2"></i>Lot Assignment
+            </h6>
+          </div>
+
+          <!-- Row 1 -->
+          <div class="row g-2 mb-3 justify-content-center">
+            <div class="col-md-3">
+              <label class="form-label">Lot Number <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="lotInput1"
+                     placeholder="e.g. LOT-001" required>
+              <div class="invalid-feedback">Please enter a valid lot number.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Number of Security Codes <span class="text-danger">*</span></label>
+              <input type="number" class="form-control sec-code-count-input lot-code-result" id="secCodeCount1"
+                     placeholder="Auto-filled from lot number"
+                     readonly tabindex="-1">
+              <div class="invalid-feedback">Lot number not found — no codes assigned.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="row g-2 mb-3 justify-content-center">
+            <div class="col-md-3">
+              <label class="form-label">Lot Number <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="lotInput2"
+                     placeholder="e.g. LOT-002" required>
+              <div class="invalid-feedback">Please enter a valid lot number.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Number of Security Codes <span class="text-danger">*</span></label>
+              <input type="number" class="form-control sec-code-count-input lot-code-result" id="secCodeCount2"
+                     placeholder="Auto-filled from lot number"
+                     readonly tabindex="-1">
+              <div class="invalid-feedback">Lot number not found — no codes assigned.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+          </div>
+
+          <!-- Row 3 -->
+          <div class="row g-2 mb-3 justify-content-center">
+            <div class="col-md-3">
+              <label class="form-label">Lot Number <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="lotInput3"
+                     placeholder="e.g. LOT-003" required>
+              <div class="invalid-feedback">Please enter a valid lot number.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Number of Security Codes <span class="text-danger">*</span></label>
+              <input type="number" class="form-control sec-code-count-input lot-code-result" id="secCodeCount3"
+                     placeholder="Auto-filled from lot number"
+                     readonly tabindex="-1">
+              <div class="invalid-feedback">Lot number not found — no codes assigned.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+          </div>
+
+          </div><!-- /lotRowsContainer -->
+
+          <!-- Add Row Button -->
+          <div class="d-flex justify-content-start mt-1 mb-2">
+            <button type="button" class="btn btn-add-row" onclick="addLotRow()">
+              <i class="fas fa-plus me-1"></i> Add Row
+            </button>
+          </div>
+
+          <!-- Total Security Codes Summary -->
+          <div class="d-flex justify-content-end mb-3 mt-2">
+            <div class="total-codes-badge">
+              <span class="total-codes-label">
+                <i class="fas fa-hashtag me-1"></i>Total Security Codes:
+              </span>
+              <span id="totalSecCodes" class="total-codes-value">0</span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-2">
+            <button type="button" class="btn btn-outline-secondary" onclick="resetLotForm()">
               Reset
             </button>
-
-            <button 
-              id="exportBtn"
-              type="button"
-              class="btn btn-primary"
-              onclick="exportBatchData()"
-            >
-              <i class="fas fa-file-export me-1"></i>
-              Export
+            <button type="button" class="btn btn-primary" onclick="submitLotAssignment()">
+              <i class="fas fa-check-circle me-1"></i> Submit
             </button>
           </div>
 
         </form>
-
       </div>
 
     </div>
   </section>
+  <!-- /ASSIGN LOT & SECURITY CODES SECTION -->
+
+
+  <!-- EXPORT SECURITY CODE SECTION -->
+  <section class="mb-5">
+    <div class="container">
+
+      <div class="section-header mb-3">
+        <h2 class="section-title">
+          <i class="fas fa-file-export me-2"></i>Export Security Code
+        </h2>
+      </div>
+
+      <div class="card-box">
+        <form id="exportSecCodeForm">
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Lot Number <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="exportLotInput"
+                     placeholder="e.g. LOT-001" required>
+              <div class="invalid-feedback">Please enter a valid lot number.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">File Format <span class="text-danger">*</span></label>
+              <select class="form-select" id="exportFormatSelect" required>
+                <option value="" disabled selected>Select format…</option>
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+              </select>
+              <div class="invalid-feedback">Please select a file format.</div>
+              <div class="valid-feedback">Looks good!</div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between mt-4">
+            <button type="button" class="btn btn-outline-secondary" onclick="resetExportSecCodeForm()">
+              Reset
+            </button>
+            <button type="button" class="btn btn-primary" id="exportSecCodeBtn" onclick="submitExportSecCode()">
+              <i class="fas fa-file-export me-1"></i> Export
+            </button>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </section>
+  <!-- /EXPORT SECURITY CODE SECTION -->
 
 
   <!-- Footer -->
@@ -341,106 +283,15 @@
     </div>
   </footer>
 
-  <!-- Create Batch Confirmation Modal -->
-  <div
-    class="modal fade"
-    id="batchConfirmModal"
-    tabindex="-1"
-    aria-hidden="true"
-  >
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <h5 class="modal-title">Confirm Batch Creation</h5>
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="modal"
-            aria-label="Close"
-          ></button>
-        </div>
-
-        <div class="modal-body">
-          <p class="text-muted mb-3">
-            Please review the batch details before confirming.
-          </p>
-
-          <div class="row g-3">
-
-            <div class="col-md-6">
-              <strong>Product ID:</strong>
-              <div id="confirmProdId"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>Generic:</strong>
-              <div id="confirmGeneric"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>Product Name:</strong>
-              <div id="confirmProdName"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>Batch:</strong>
-              <div id="confirmBatch"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>Manufacturing Date:</strong>
-              <div id="confirmMnfDate"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>Expiry Date:</strong>
-              <div id="confirmExpDate"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>Batch Size:</strong>
-              <div id="confirmBatchSize"></div>
-            </div>
-
-            <div class="col-md-6">
-              <strong>UOM:</strong>
-              <div id="confirmUom"></div>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button
-            type="button"
-            class="btn btn-secondary"
-            data-bs-dismiss="modal"
-          >
-            Edit
-          </button>
-
-          <button
-            type="button"
-            class="btn btn-primary"
-            onclick="confirmCreateBatch()"
-          >
-            Confirm & Create
-          </button>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
   <!-- Scroll To Top Button -->
   <button id="backToTopBtn" class="back-to-top-btn" style="display:none" onclick="scrollToTop()">↑</button>
 
-  <!-- JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+          crossorigin="anonymous"></script>
 
-  <!-- Your existing JS -->
+  <!-- App JS -->
   <script src="{{ url_for('static', filename='js/batch.js') }}"></script>
 
 </body>

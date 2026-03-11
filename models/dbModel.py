@@ -150,7 +150,7 @@ class ProductDB:
             # )
             # result =  o_user_email.getvalue()
             # print("Status:", o_status_msg.getvalue())
-            result = 'tahsinulislam84@gmail.com'
+            result = "tahsinulislam84@gmail.com"
             return result
         except Exception as e:
             print("Failed:", e)
