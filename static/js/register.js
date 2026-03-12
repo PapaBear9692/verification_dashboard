@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // modal fields
   const confirmFullName = document.getElementById("confirmFullName");
-  const confirmUsername = document.getElementById("confirmUsername"); // your modal label says Email, but we will show Username
+  const confirmUsername = document.getElementById("confirmUsername");
   const confirmPhone = document.getElementById("confirmPhone");
   const confirmRole = document.getElementById("confirmRole");
   const confirmEmail = document.getElementById("confirmEmail");
@@ -97,36 +97,74 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =====================
-     OPTIONAL: LIVE CHECK (PASSWORD MATCH)
-  ====================== */
-  // confirmPasswordInput.addEventListener("input", () => {
-  //   if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-  //     confirmPasswordInput.setCustomValidity("Passwords do not match");
-  //   } else {
-  //     confirmPasswordInput.setCustomValidity("");
-  //   }
-  // });
-
-  // passwordInput.addEventListener("input", () => {
-  //   if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-  //     confirmPasswordInput.setCustomValidity("Passwords do not match");
-  //   } else {
-  //     confirmPasswordInput.setCustomValidity("");
-  //   }
-  // });
-
-  /* =====================
-    REAL-TIME PASSWORD MATCH INDICATOR
+    REAL-TIME PASSWORD STRENGTH RULES
   ====================== */
 
   registerBtn.disabled = true; // Disable initially
 
+  /**
+   * Checks a single password against all rules.
+   * Returns an object with a boolean per rule.
+   */
+  function getPasswordRules(value) {
+    return {
+      minLength:   value.length >= 8,
+      noSpace:     !/\s/.test(value),
+      hasLower:    /[a-z]/.test(value),
+      hasUpper:    /[A-Z]/.test(value),
+      hasNumber:   /[0-9]/.test(value),
+    };
+  }
+
+  /**
+   * Renders the live rule checklist below the password field.
+   * Creates the <ul> on first call and updates it on subsequent calls.
+   */
+  function renderPasswordRules(rules) {
+    const containerId = "passwordRulesHint";
+    let container = document.getElementById(containerId);
+
+    if (!container) {
+      container = document.createElement("ul");
+      container.id = containerId;
+      container.style.cssText =
+        "list-style:none;padding:0.4rem 0 0;margin:0;font-size:0.78rem;line-height:1.8;";
+      // Insert right after the password error span
+      const errorSpan = document.getElementById("passwordError");
+      errorSpan.parentNode.insertBefore(container, errorSpan.nextSibling);
+    }
+
+    const items = [
+      { key: "minLength", label: "At least 8 characters" },
+      { key: "noSpace",   label: "No spaces allowed" },
+      { key: "hasLower",  label: "At least one lowercase letter (a–z)" },
+      { key: "hasUpper",  label: "At least one uppercase letter (A–Z)" },
+      { key: "hasNumber", label: "At least one number (0–9)" },
+    ];
+
+    container.innerHTML = items
+      .map(({ key, label }) => {
+        const passed = rules[key];
+        const color  = passed ? "#027f0f" : "#6b7280";
+        const icon   = passed ? "✔" : "✖";
+        return `<li style="color:${color}"><span style="margin-right:0.4rem">${icon}</span>${label}</li>`;
+      })
+      .join("");
+  }
+
+  /**
+   * Returns true only when all password rules pass.
+   */
+  function isPasswordValid(value) {
+    const r = getPasswordRules(value);
+    return r.minLength && r.noSpace && r.hasLower && r.hasUpper && r.hasNumber;
+  }
+
   function checkPasswordMatch() {
     const password = passwordInput.value;
-    const confirm = confirmPasswordInput.value;
+    const confirm  = confirmPasswordInput.value;
     const errorSpan = document.getElementById("confirmPasswordError");
 
-    // If confirm field is empty → no message
     if (!confirm) {
       errorSpan.textContent = "";
       registerBtn.disabled = true;
@@ -137,7 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
       errorSpan.textContent = "Passwords match ✔";
       errorSpan.classList.remove("text-danger");
       errorSpan.classList.add("text-success");
-      registerBtn.disabled = false;
+      // Only enable Register if password also passes all rules
+      registerBtn.disabled = !isPasswordValid(password);
     } else {
       errorSpan.textContent = "Passwords do not match";
       errorSpan.classList.remove("text-success");
@@ -146,8 +185,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Listen to both fields
-  passwordInput.addEventListener("input", checkPasswordMatch);
+  // Live password rule feedback
+  passwordInput.addEventListener("input", () => {
+    const rules = getPasswordRules(passwordInput.value);
+    renderPasswordRules(rules);
+
+    // Clear password-level error once user starts fixing it
+    if (isPasswordValid(passwordInput.value)) {
+      document.getElementById("passwordError").textContent = "";
+    }
+
+    checkPasswordMatch();
+  });
+
   confirmPasswordInput.addEventListener("input", checkPasswordMatch);
 
   /* =====================
@@ -155,13 +205,11 @@ document.addEventListener("DOMContentLoaded", () => {
      (because your HTML uses onload / onclick)
   ====================== */
   window.openConfirmModal = function (event) {
-    // keep compatibility with: onsubmit="openConfirmModal(event)"
     if (event) event.preventDefault();
     form.dispatchEvent(new Event("submit", { cancelable: true }));
   };
 
   window.confirmRegistration = function () {
-    // keep compatibility with: onclick="confirmRegistration()"
     confirmBtn.click();
   };
 
@@ -179,73 +227,86 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function collectPayload() {
     return {
-      username: usernameInput.value.trim(),
-      employeeID: String(employeeIdInput.value || "").trim(),
-      fullName: fullNameInput.value.trim(),
-      phone: phoneInput.value.trim(),
-      password: passwordInput.value,
+      username:        usernameInput.value.trim(),
+      employeeID:      String(employeeIdInput.value || "").trim(),
+      fullName:        fullNameInput.value.trim(),
+      phone:           phoneInput.value.trim(),
+      password:        passwordInput.value,
       confirmPassword: confirmPasswordInput.value,
-      role: roleSelect.value,
-      email: email.value.trim(),
-      timezone: getTimezone()
+      role:            roleSelect.value,
+      email:           email.value.trim(),
+      timezone:        getTimezone()
     };
   }
 
   function showErrorMessage(inputId, message) {
-  const errorElement = document.getElementById(inputId + 'Error');
-  errorElement.textContent = message;
+    const errorElement = document.getElementById(inputId + "Error");
+    if (errorElement) errorElement.textContent = message;
   }
 
   function validate(p) {
-    let hasError = false; // Flag to check if any errors exist
+    let hasError = false;
 
     // Clear previous errors
-    document.querySelectorAll('.text-danger').forEach(el => el.textContent = '');
+    document.querySelectorAll(".text-danger").forEach(el => (el.textContent = ""));
 
     if (!p.username || !p.employeeID || !p.fullName || !p.password || !p.confirmPassword || !p.role) {
-      showErrorMessage('username', 'All required fields must be filled');
+      showErrorMessage("username", "All required fields must be filled");
       hasError = true;
     }
 
     if (p.username.length < 3) {
-      showErrorMessage('username', 'Username must be at least 3 characters');
+      showErrorMessage("username", "Username must be at least 3 characters");
       hasError = true;
     }
 
     if (!/^\d{10,10}$/.test(p.employeeID)) {
-      showErrorMessage('employeeID', 'Employee ID must be exactly 10 digits (e.g., 0000001667)');
+      showErrorMessage("employeeID", "Employee ID must be exactly 10 digits (e.g., 0000001667)");
       hasError = true;
     }
 
     if (p.phone && !/^01\d{9}$/.test(p.phone)) {
-      showErrorMessage('phone', 'Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)');
+      showErrorMessage("phone", "Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)");
       hasError = true;
     }
 
     if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
-      showErrorMessage('email', 'Email format is invalid');
+      showErrorMessage("email", "Email format is invalid");
       hasError = true;
     }
 
-    if (p.password.length < 8 || p.password.length > 16) {
-      showErrorMessage('password', 'Password must be 8–16 characters long');
+    // ── Password rules ──────────────────────────────────────────────
+    if (/\s/.test(p.password)) {
+      showErrorMessage("password", "Password must not contain spaces");
+      hasError = true;
+    } else if (p.password.length < 8) {
+      showErrorMessage("password", "Password must be at least 8 characters long");
+      hasError = true;
+    } else if (!/[a-z]/.test(p.password)) {
+      showErrorMessage("password", "Password must contain at least one lowercase letter");
+      hasError = true;
+    } else if (!/[A-Z]/.test(p.password)) {
+      showErrorMessage("password", "Password must contain at least one uppercase letter");
+      hasError = true;
+    } else if (!/[0-9]/.test(p.password)) {
+      showErrorMessage("password", "Password must contain at least one number (0–9)");
       hasError = true;
     }
+    // ────────────────────────────────────────────────────────────────
 
     if (p.password !== p.confirmPassword) {
-      showErrorMessage('confirmPassword', 'Passwords do not match');
+      showErrorMessage("confirmPassword", "Passwords do not match");
       hasError = true;
     }
 
-    return hasError ? "Please correct the errors above." : null; // Return a message if any error exists
+    return hasError ? "Please correct the errors above." : null;
   }
 
   function fillConfirmModal(p) {
     confirmFullName.textContent = p.fullName || "-";
-    confirmUsername.textContent = p.username || "-"; 
-    confirmPhone.textContent = p.phone || "-";
+    confirmUsername.textContent = p.username || "-";
+    confirmPhone.textContent    = p.phone    || "-";
 
-    // show visible role label (Administrator/Viewer)
     const selectedText =
       roleSelect.options[roleSelect.selectedIndex] &&
       roleSelect.options[roleSelect.selectedIndex].text
@@ -259,6 +320,13 @@ document.addEventListener("DOMContentLoaded", () => {
     form.reset();
     pendingPayload = null;
     confirmPasswordInput.setCustomValidity("");
+
+    // Clear the live rule hints on reset
+    const rulesEl = document.getElementById("passwordRulesHint");
+    if (rulesEl) rulesEl.innerHTML = "";
+
+    document.getElementById("confirmPasswordError").textContent = "";
+    registerBtn.disabled = true;
   }
 
   function getTimezone() {
