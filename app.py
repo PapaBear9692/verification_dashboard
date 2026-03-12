@@ -66,13 +66,35 @@ def register_user():
     role = str(data.get("role")).strip()
     email = str(data.get("email")).strip()
 
-    print(f"Received registration data: {data}")  # Debug log
+    # Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character
+    if len(password) < 8 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+        return jsonify({
+            "message": "Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character"
+        }), 400
+
 
     if password != confirm_password:
         return jsonify({
             "message": "Passwords do not match"
         }), 400
     
+    # basic validation for other fields
+    if not all([username, employee_id, full_name, phone, role, email]):
+        return jsonify({
+            "message": "All fields are required"
+        }), 400
+    
+    # Check if username or email already exists in the database
+    if db.check_username_exists(username):
+        return jsonify({
+            "message": "Username already exists"
+        }), 400
+    if db.check_email_exists(email):
+        return jsonify({
+            "message": "Email already registered"
+        }), 400
+    
+
     result = db.register_user(username, full_name, employee_id, phone, role, password, email)
     
     if  result.get("user_id") is not None:
@@ -204,65 +226,61 @@ def assign_batch():
 
     data = request.get_json(silent=True) or {}
 
-    brand    = data.get("brand", "").strip()
-    code     = data.get("code", "").strip()
+    product_name    = data.get("brand", "").strip()
+    product_code     = data.get("code", "").strip()
     lots     = data.get("lots", [])
     password = data.get("password", "").strip()
 
-    created_by = session.get("user_id")
+    created_by = session.get("username", "unknown_user")
 
     # ── Validate top-level fields ──────────────────────────────
-    if not all([brand, code, password, created_by]):
+    if not all([product_name, product_code, password, created_by]):
         return jsonify({"message": "All fields are required"}), 400
 
     if not isinstance(lots, list) or len(lots) == 0:
         return jsonify({"message": "At least one lot must be provided"}), 400
 
     # ── Verify password ────────────────────────────────────────
-    # Replace this block with your real password-check logic,
-    # e.g. querying the DB for the current user's hashed password.
-    #
-    #   user = db.get_user_by_id(created_by)
-    #   if not check_password_hash(user["password"], password):
-    #       return jsonify({"message": "Incorrect password"}), 403
-    #
-    # ── Stub (remove when wiring real auth) ───────────────────
-    # if password != "correct_password":
-    #     return jsonify({"message": "Incorrect password"}), 403
+    user = db.login(created_by, password)
+    if user["status_code"] != 1:
+        return jsonify({"message": "Incorrect password"}), 40
 
     # ── Validate and normalise each lot row ────────────────────
     normalised_lots = []
     for i, lot in enumerate(lots, start=1):
-        lot_number = str(lot.get("lotNumber", "")).strip()
+        lot_number = str(lot.get("lotNumber", "")).strip().upper()
 
         if not lot_number:
             return jsonify({"message": f"Row {i}: lot number is missing"}), 400
 
         normalised_lots.append(lot_number)
-
+    
+    o_status_code = -1
+    o_status_msg = None
     # ── Call DB / business logic for each lot ─────────────────
-    # Replace the stub loop below with your real DB call, e.g.:
-    #
-    #   for lot_number in normalised_lots:
-    #       o_status_code, o_status_msg = db.assign_lot(
-    #           code, brand, lot_number, created_by
-    #       )
-    #       if int(o_status_code) != 1:
-    #           return jsonify({"message": o_status_msg or "Assignment failed"}), 400
-    #
-    # ── Stub ──────────────────────────────────────────────────
-    o_status_code = 1
-    o_status_msg  = "Lot assignment successful"
-    import time; time.sleep(1)  # simulate processing — remove in production
-    # ── End stub ──────────────────────────────────────────────
+    try:
+        for lot_number in normalised_lots:
+          o_status_code, o_status_msg = db.assign_batch(
+              product_code, product_name, lot_number
+          )
+          if int(o_status_code) != 1:
+              return jsonify({"message": o_status_msg or "Assignment failed"}), 400
+          time.sleep(1)
+    except Exception as e:
+        o_status_code = 0
+        o_status_msg = str(e)
+        return jsonify({
+            "status_code": int(o_status_code) if o_status_code is not None else 0,
+            "message":     o_status_msg or "Lot assignment failed",
+        }), 400
 
     if int(o_status_code) == 1:
         return jsonify({
             "status_code": 1,
             "message":     o_status_msg,
             "summary": {
-                "product_code":  code,
-                "brand":         brand,
+                "product_code":  product_code,
+                "brand":         product_name,
                 "lots_assigned": len(normalised_lots),
             }
         }), 200
@@ -285,6 +303,7 @@ def get_lot():
         return jsonify({"message": "Lot number is required"}), 400
 
     result = db.get_lot_code_count(lot_number)
+    print(f"Debug: get_lot_code_count('{lot_number}') returned: {result}")  # Debug log
     
     if result is None:
         return jsonify({"message": f"Lot '{lot_number}' not found"}), 404

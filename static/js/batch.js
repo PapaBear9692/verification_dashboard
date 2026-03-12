@@ -92,7 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
                class="form-control lot-input"
                id="lotInput${id}"
                placeholder="e.g. LOT-${String(id).padStart(3, "0")}"
-               autocomplete="off">
+               autocomplete="off"
+               oninput="this.value = this.value.toUpperCase()">
       </td>
       <td class="lot-code-cell empty" id="lotCodeCell${id}">
         <span class="sec-code-display">—</span>

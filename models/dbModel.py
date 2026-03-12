@@ -132,6 +132,49 @@ class ProductDB:
             cursor.close()
             conn.close()
     
+    def check_username_exists(self, username):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            o_exists = cursor.var(oracledb.DB_TYPE_NUMBER)
+            cursor.callproc(
+                "verify_username_exists_prc",
+                [
+                    username,
+                    o_exists
+                ]
+            )
+            return o_exists.getvalue() == 1  # Return True if user exists, False otherwise
+        except Exception as e:
+            print("User existence check failed:", e)
+            return False  # Assume user doesn't exist on error
+        finally:
+            cursor.close()
+            conn.close()
+
+    def check_email_exists(self, email):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            o_exists = cursor.var(oracledb.DB_TYPE_NUMBER)
+            cursor.callproc(
+                "verify_email_exists_prc",
+                [
+                    email,
+                    o_exists
+                ]
+            )
+            return o_exists.getvalue() == 1  # Return True if email exists, False otherwise
+        except Exception as e:
+            print("Email existence check failed:", e)
+            return False  # Assume email doesn't exist on error
+        finally:
+            cursor.close()
+            conn.close()
+
+    
     def get_user_email(self, username):
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -230,7 +273,7 @@ class ProductDB:
             conn.close()
     
 
-    def assign_batch(self, p_prod_id, p_generic, p_prod_name, p_batch, p_mnf_date, p_exp_date, p_batch_size, p_uom, created_by, p_lot_no):
+    def assign_batch(self, product_code, product_name, lot_number):
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -241,16 +284,9 @@ class ProductDB:
             cursor.callproc(
                 "INSERT_PRODUCT_AUTH_MASTER",
                 [
-                    int(p_prod_id),
-                    p_generic,
-                    p_prod_name,
-                    p_batch,
-                    p_mnf_date,
-                    p_exp_date,
-                    int(p_batch_size),
-                    p_uom,
-                    created_by,
-                    int(p_lot_no),
+                    product_code,
+                    product_name,
+                    lot_number,
                     o_status_code,
                     o_status_msg
                 ]
@@ -269,20 +305,6 @@ class ProductDB:
 
 
     def get_lot_code_count(self, lot_no):
-        # # ── Stub (remove when wiring real DB) ────────────────────
-        # STUB_DB = {
-        #     "LOT-001": 500,
-        #     "LOT-002": 750,
-        #     "LOT-003": 1000,
-        #     "LOT-004": 250,
-        #     "LOT-005": 600,
-        # }
-        # import time; time.sleep(0.3)   # simulate DB latency — remove in production
-
-        # raw = STUB_DB.get(lot_number.upper())
-        # result = {"lot_number": lot_number.upper(), "available_codes": raw} if raw is not None else None
-        # # ── End stub ──────────────────────────────────────────────
-        # return result
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -291,7 +313,7 @@ class ProductDB:
             lot_size = cursor.callfunc(
                 "get_lot_size",
                 oracledb.DB_TYPE_NUMBER,  # Expected return type from the DB
-                [int(lot_no)]             # Input parameter(s) wrapped in a list
+                [lot_no]             # Input parameter(s) wrapped in a list
             )
             if lot_size != 0:
                 result = {"lot_number": lot_no.upper(), "available_codes": lot_size} if lot_size is not None else None
@@ -361,12 +383,13 @@ class ProductDB:
         cursor = conn.cursor()
 
         try:
+            batch_no = ""
             o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
             cursor.callproc(
-                "GEN_SCRATCH_CODE_test",
+                "GEN_SCRATCH_CODE_TEST",
                 [   
-                    "TEST",
+                    batch_no,
                     session['user_id'],
                     quantity,
                     o_status_code,
