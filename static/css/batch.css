@@ -650,3 +650,222 @@ img {
 .lot-assign-table tbody tr.lot-row-new {
   animation: lot-row-in 0.2s ease forwards;
 }
+
+/* ── Lot Assignment Confirmation Modal ───────────────────── */
+.lot-assign-confirm-modal .modal-content {
+  border-radius: 0.9rem;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.lot-assign-confirm-modal .modal-header {
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1rem 1.4rem;
+}
+
+.lot-assign-confirm-modal .modal-title,
+.lot-assign-confirm-modal-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  letter-spacing: 0.01em;
+}
+
+.lot-confirm-sec-total {
+  font-size: 0.95rem;
+  margin-left: 11.5rem;
+}
+
+.modal-title-icon {
+  color: var(--brand);
+}
+
+.required-asterisk {
+  color: #dc2626;
+}
+
+/* Lot section spacing */
+.lot-section-container {
+  margin-top: 40px;
+}
+
+/* Utility - initially hidden */
+.initially-hidden {
+  display: none !important;
+}
+
+.lot-assign-confirm-modal .modal-body {
+  padding: 1.3rem 1.4rem;
+}
+
+/* Product summary in modal */
+.lot-confirm-summary {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.lot-confirm-summary-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.lot-confirm-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+  margin-bottom: 2px;
+}
+
+.lot-confirm-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  font-family: monospace;
+}
+
+.lot-confirm-value.brand {
+  font-family: inherit;
+}
+
+/* Confirmation table */
+.lot-confirm-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.lot-confirm-table thead tr {
+  background: #f3f4f6;
+}
+
+.lot-confirm-table th {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #6b7280;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.lot-confirm-table th:first-child {
+  width: 2.5rem;
+}
+
+.lot-confirm-table th:last-child {
+  text-align: right;
+}
+
+.lot-confirm-table td {
+  padding: 0.5rem 0.8rem;
+}
+
+.lot-confirm-table tbody td {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.lot-confirm-table tfoot tr {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.lot-confirm-table tfoot tr:first-child {
+  background: #f9fafb;
+}
+
+.lot-confirm-table tfoot tr:last-child {
+  background: #f0fdf4;
+  border-top: 1px solid #bbf7d0;
+}
+
+.lot-confirm-table tfoot td {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.lot-confirm-table tfoot tr:first-child td {
+  color: #6b7280;
+}
+
+.lot-confirm-table tfoot tr:last-child td {
+  color: #166534;
+}
+
+.lot-confirm-info {
+  margin-top: 1rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+/* Password confirmation */
+.lot-confirm-password-group {
+  margin-top: 0.75rem;
+}
+
+.lot-confirm-password-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: #374151;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.lot-confirm-password-wrapper {
+  position: relative;
+}
+
+.lot-confirm-password-input {
+  padding-right: 2.5rem;
+}
+
+.lot-confirm-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+  line-height: 1;
+  tap-highlight-color: transparent;
+}
+
+.lot-confirm-password-error {
+  display: none;
+  font-size: 0.78rem;
+  color: #dc2626;
+  margin-top: 4px;
+}
+
+.lot-confirm-password-error.show {
+  display: block;
+}
+
+.lot-assign-confirm-modal .modal-footer {
+  border-top: 1px solid var(--border-subtle);
+  padding: 0.9rem 1.4rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.lot-assign-confirm-modal .btn {
+  border-radius: 999px;
+  font-size: 0.86rem;
+}

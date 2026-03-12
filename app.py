@@ -111,7 +111,8 @@ def reset_send_otp():
 
     # Look up the user's email from DB
     # db.get_user_email() should return the email string or None if not found
-    user_email = db.get_user_email(username)
+    result = db.get_user_email(username)
+    user_email = str(result.get("user_email"))
     if not user_email:
         # Intentionally vague — don't reveal whether username exists
         return jsonify({"message": "If this username exists, an OTP will be sent to the registered email."}), 200
@@ -277,43 +278,14 @@ def get_lot():
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401
 
-    data       = request.get_json(silent=True) or {}
+    data = request.get_json(silent=True) or {}
     lot_number = data.get("lotNumber", "").strip()
 
     if not lot_number:
         return jsonify({"message": "Lot number is required"}), 400
 
-    # ── DB call ───────────────────────────────────────────────
-    # Replace this block with your real query, e.g.:
-    #
-    #   result = db.get_lot_code_count(lot_number)
-    #
-    # Your DB function should:
-    #   • Look up the lot by lot_number
-    #   • Return the count of available (unassigned) security codes
-    #   • Return None / raise if the lot does not exist
-    #
-    # Expected return shape from db layer:
-    #   result = {
-    #       "lot_number":        "LOT-001",
-    #       "available_codes":   500,       # unassigned codes remaining
-    #   }
-    #   or None if not found.
-    #
-    # ── Stub (remove when wiring real DB) ────────────────────
-    STUB_DB = {
-        "LOT-001": 500,
-        "LOT-002": 750,
-        "LOT-003": 1000,
-        "LOT-004": 250,
-        "LOT-005": 600,
-    }
-    import time; time.sleep(0.3)   # simulate DB latency — remove in production
-
-    raw = STUB_DB.get(lot_number.upper())
-    result = {"lot_number": lot_number.upper(), "available_codes": raw} if raw is not None else None
-    # ── End stub ──────────────────────────────────────────────
-
+    result = db.get_lot_code_count(lot_number)
+    
     if result is None:
         return jsonify({"message": f"Lot '{lot_number}' not found"}), 404
 

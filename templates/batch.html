@@ -119,7 +119,7 @@
           </div>
 
           <!-- Lot Assignment Table -->
-          <div style="margin-top: 40px;">
+          <div class="lot-section-container">
             <div class="lot-rows-heading mb-3">
               <h6 class="lot-rows-label">
                 <i class="fas fa-layer-group me-2"></i>Lot Assignment
@@ -231,110 +231,87 @@
   </footer>
 
   <!-- Scroll To Top Button -->
-  <button id="backToTopBtn" class="back-to-top-btn" style="display:none" onclick="scrollToTop()">↑</button>
+  <button id="backToTopBtn" class="back-to-top-btn initially-hidden" onclick="scrollToTop()">↑</button>
 
   <!-- LOT ASSIGNMENT CONFIRMATION MODAL -->
-  <div class="modal fade" id="lotAssignConfirmModal" tabindex="-1"
+  <div class="modal fade lot-assign-confirm-modal" id="lotAssignConfirmModal" tabindex="-1"
        aria-labelledby="lotAssignConfirmModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="border-radius:0.9rem; border:1px solid #e5e7eb; overflow:hidden;">
+      <div class="modal-content">
 
         <!-- Header -->
-        <div class="modal-header" style="background:#f9fafb; border-bottom:1px solid #e5e7eb; padding:1rem 1.4rem;">
-          <h5 class="modal-title" id="lotAssignConfirmModalLabel"
-              style="font-size:0.95rem; font-weight:600; color:#111827; letter-spacing:0.01em;">
-            <i class="fas fa-layer-group me-2" style="color:var(--brand)"></i>Confirm Lot Assignment
+        <div class="modal-header">
+          <h5 class="modal-title lot-assign-confirm-modal-title" id="lotAssignConfirmModalLabel">
+            <i class="fas fa-layer-group me-2 modal-title-icon"></i>Confirm Lot Assignment
           </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
         <!-- Body -->
-        <div class="modal-body" style="padding:1.3rem 1.4rem;">
+        <div class="modal-body">
 
           <!-- Product summary -->
-          <div style="display:flex; gap:1.5rem; margin-bottom:1.1rem;">
-            <div>
-              <div style="font-size:0.72rem; font-weight:600; text-transform:uppercase;
-                          letter-spacing:0.1em; color:#6b7280; margin-bottom:2px;">Product Code</div>
-              <div id="lotConfirmCode"
-                   style="font-size:0.9rem; font-weight:600; color:#111827; font-family:monospace;"></div>
+          <div class="lot-confirm-summary">
+            <div class="lot-confirm-summary-item">
+              <div class="lot-confirm-label">Product Code</div>
+              <div id="lotConfirmCode" class="lot-confirm-value"></div>
             </div>
-            <div>
-              <div style="font-size:0.72rem; font-weight:600; text-transform:uppercase;
-                          letter-spacing:0.1em; color:#6b7280; margin-bottom:2px;">Brand Name</div>
-              <div id="lotConfirmBrand"
-                   style="font-size:0.9rem; font-weight:600; color:#111827;"></div>
+            <div class="lot-confirm-summary-item">
+              <div class="lot-confirm-label">Brand Name</div>
+              <div id="lotConfirmBrand" class="lot-confirm-value brand"></div>
             </div>
           </div>
 
           <!-- Lots table -->
-          <table style="width:100%; border-collapse:separate; border-spacing:0;
-                        border:1px solid #e5e7eb; border-radius:0.6rem; overflow:hidden;
-                        font-size:0.85rem;">
+          <table class="lot-confirm-table">
             <thead>
-              <tr style="background:#f3f4f6;">
-                <th style="padding:0.5rem 0.8rem; font-size:0.72rem; font-weight:600;
-                           text-transform:uppercase; letter-spacing:0.09em; color:#6b7280;
-                           border-bottom:1px solid #e5e7eb; width:2.5rem;">#</th>
-                <th style="padding:0.5rem 0.8rem; font-size:0.72rem; font-weight:600;
-                           text-transform:uppercase; letter-spacing:0.09em; color:#6b7280;
-                           border-bottom:1px solid #e5e7eb;">Lot Number</th>
-                <th style="padding:0.5rem 0.8rem; font-size:0.72rem; font-weight:600;
-                           text-transform:uppercase; letter-spacing:0.09em; color:#6b7280;
-                           border-bottom:1px solid #e5e7eb; text-align:right;">Available Codes</th>
+              <tr>
+                <th>#</th>
+                <th>Lot Number</th>
+                <th>Available Codes</th>
               </tr>
             </thead>
             <tbody id="lotConfirmTableBody"></tbody>
             <tfoot>
-              <tr style="background:#f9fafb; border-top:1px solid #e5e7eb;">
-                <td colspan="3"
-                    style="padding:0.5rem 0.8rem; font-size:0.78rem; font-weight:600;
-                           text-transform:uppercase; letter-spacing:0.09em; color:#6b7280;">
+              <tr>
+                <td colspan="3">
                   <i class="fas fa-layer-group me-1"></i>
                   <span id="lotConfirmTotal">0</span> lot(s) to be assigned
                 </td>
               </tr>
-              <tr style="background:#f0fdf4; border-top:1px solid #bbf7d0;">
-                <td colspan="3"
-                    style="padding:0.5rem 0.8rem; font-size:0.78rem; font-weight:600;
-                           text-transform:uppercase; letter-spacing:0.09em; color:#166534;">
+              <tr>
+                <td colspan="3">
                   <i class="fas fa-hashtag me-1"></i>Total Security Codes:
-                  <span id="lotConfirmSecTotal" style="font-size:0.95rem; margin-left:6px;">0</span>
+                  <span id="lotConfirmSecTotal" class="lot-confirm-sec-total">0</span>
                 </td>
               </tr>
             </tfoot>
           </table>
 
-          <p style="margin-top:1rem; margin-bottom:0.75rem; font-size:0.82rem; color:#6b7280;">
+          <p class="lot-confirm-info">
             <i class="fas fa-info-circle me-1"></i>
             Please review the details above before confirming. This action will submit the
             lot assignment to the system.
           </p>
 
           <!-- Password confirmation -->
-          <div style="margin-top:0.75rem;">
-            <label for="lotConfirmPassword"
-                   style="font-size:0.78rem; font-weight:600; text-transform:uppercase;
-                          letter-spacing:0.09em; color:#374151; display:block; margin-bottom:5px;">
-              Confirm Your Password <span style="color:#dc2626;">*</span>
+          <div class="lot-confirm-password-group">
+            <label for="lotConfirmPassword" class="lot-confirm-password-label">
+              Confirm Your Password <span class="required-asterisk">*</span>
             </label>
-            <div style="position:relative;">
+            <div class="lot-confirm-password-wrapper">
               <input type="password" id="lotConfirmPassword"
-                     class="form-control"
+                     class="form-control lot-confirm-password-input"
                      placeholder="Enter your password to confirm"
-                     autocomplete="current-password"
-                     style="padding-right:2.5rem;">
+                     autocomplete="current-password">
               <button type="button"
                       onclick="toggleLotConfirmPasswordVisibility()"
                       tabindex="-1"
-                      style="position:absolute; right:10px; top:50%; transform:translateY(-50%);
-                             background:none; border:none; color:#9ca3af; cursor:pointer;
-                             padding:0; font-size:0.85rem; line-height:1;">
+                      class="lot-confirm-password-toggle">
                 <i class="fas fa-eye" id="lotConfirmPasswordEyeIcon"></i>
               </button>
             </div>
-            <div id="lotConfirmPasswordError"
-                 style="display:none; font-size:0.78rem; color:#dc2626; margin-top:4px;">
+            <div id="lotConfirmPasswordError" class="lot-confirm-password-error">
               <i class="fas fa-exclamation-circle me-1"></i>Password is required.
             </div>
           </div>
@@ -342,15 +319,13 @@
         </div>
 
         <!-- Footer -->
-        <div class="modal-footer" style="border-top:1px solid #e5e7eb; padding:0.9rem 1.4rem;
-                                         display:flex; justify-content:space-between;">
+        <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary"
-                  data-bs-dismiss="modal" style="border-radius:999px; font-size:0.86rem;">
+                  data-bs-dismiss="modal">
             <i class="fas fa-times me-1"></i> Cancel
           </button>
           <button type="button" class="btn btn-primary" id="lotConfirmSubmitBtn"
-                  onclick="confirmLotAssignment()"
-                  style="border-radius:999px; font-size:0.86rem;">
+                  onclick="confirmLotAssignment()">
             <i class="fas fa-check-circle me-1"></i> Confirm &amp; Submit
           </button>
         </div>

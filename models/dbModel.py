@@ -137,20 +137,18 @@ class ProductDB:
         cursor = conn.cursor()
 
         try:
-            o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_user_email = cursor.var(oracledb.DB_TYPE_VARCHAR)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
 
-            # cursor.callproc(
-            #     "verify_user_get_email_prc",
-            #     [
-            #         username,
-            #         o_user_email,
-            #         o_status_msg
-            #     ]
-            # )
-            # result =  o_user_email.getvalue()
-            # print("Status:", o_status_msg.getvalue())
-            result = "tahsinulislam84@gmail.com"
+            cursor.callproc(
+                "verify_user_get_email_prc",
+                [
+                    username,
+                    o_user_email,
+                    o_status_msg
+                ]
+            )
+            result =  { "user_email":o_user_email.getvalue(), "status":o_status_msg.getvalue()}          
             return result
         except Exception as e:
             print("Failed:", e)
@@ -269,6 +267,44 @@ class ProductDB:
             cursor.close()
             conn.close()
 
+
+    def get_lot_code_count(self, lot_no):
+        # # ── Stub (remove when wiring real DB) ────────────────────
+        # STUB_DB = {
+        #     "LOT-001": 500,
+        #     "LOT-002": 750,
+        #     "LOT-003": 1000,
+        #     "LOT-004": 250,
+        #     "LOT-005": 600,
+        # }
+        # import time; time.sleep(0.3)   # simulate DB latency — remove in production
+
+        # raw = STUB_DB.get(lot_number.upper())
+        # result = {"lot_number": lot_number.upper(), "available_codes": raw} if raw is not None else None
+        # # ── End stub ──────────────────────────────────────────────
+        # return result
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            # callfunc requires: (function_name, return_type, [parameters])
+            lot_size = cursor.callfunc(
+                "get_lot_size",
+                oracledb.DB_TYPE_NUMBER,  # Expected return type from the DB
+                [int(lot_no)]             # Input parameter(s) wrapped in a list
+            )
+            if lot_size != 0:
+                result = {"lot_number": lot_no.upper(), "available_codes": lot_size} if lot_size is not None else None
+                return result
+            return None
+        except Exception as e:
+            print(f"Failed to retrieve lot size for lot {lot_no}:", e)
+            return None  # Or whatever error fallback makes sense for your app
+            
+        finally:
+            cursor.close()
+            conn.close()    
+    
 
     def export_batch_codes(self, batchNumber):
         conn = self._get_connection()
