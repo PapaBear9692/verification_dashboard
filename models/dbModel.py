@@ -231,20 +231,34 @@ class ProductDB:
             conn.close()
     
 
-    def assign_batch(self, product_code, product_name, lot_number):
+    def assign_batch(self, lot_number, product_code, product_name, username):
         conn = self._get_connection()
         cursor = conn.cursor()
 
         try:
+            
+            P_GENERIC = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            P_BATCH = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            P_MNF_DATE = cursor.var(oracledb.DB_TYPE_DATE)
+            P_EXP_DATE = cursor.var(oracledb.DB_TYPE_DATE)
+            P_BATCH_SIZE = cursor.var(oracledb.DB_TYPE_NUMBER)
+            P_UOM = cursor.var(oracledb.DB_TYPE_VARCHAR)
             o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
 
             cursor.callproc(
                 "INSERT_PRODUCT_AUTH_MASTER",
                 [
-                    product_code,
-                    product_name,
                     lot_number,
+                    int(product_code),
+                    P_GENERIC,
+                    product_name,
+                    P_BATCH,
+                    P_MNF_DATE,
+                    P_EXP_DATE,
+                    P_BATCH_SIZE,
+                    P_UOM,
+                    username,
                     o_status_code,
                     o_status_msg
                 ]
@@ -336,7 +350,7 @@ class ProductDB:
             conn.close()
 
 
-    def generate_codes(self,quantity):
+    def generate_codes(self,quantity, username):
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -347,8 +361,7 @@ class ProductDB:
             cursor.callproc(
                 "GEN_SCRATCH_CODE_TEST",
                 [   
-                    batch_no,
-                    session['user_id'],
+                    username,
                     quantity,
                     o_status_code,
                     o_status_msg

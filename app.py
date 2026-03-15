@@ -69,6 +69,9 @@ def register():
 
 @app.route("/register", methods=["POST"])
 def register_user():
+    """
+    Registration Step 1: Validate user data and send OTP to email.
+    """
     data = request.get_json()
     username = str(data.get("username")).strip()
     employee_id = str(data.get("employeeId")).strip()
@@ -79,34 +82,118 @@ def register_user():
     role = str(data.get("role")).strip()
     email = str(data.get("email")).strip()
 
-    # Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character
+    # Password validation
     if len(password) < 8 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
         return jsonify({
             "message": "Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character"
         }), 400
-
 
     if password != confirm_password:
         return jsonify({
             "message": "Passwords do not match"
         }), 400
     
-    # basic validation for other fields
+    # Validate all fields are present
     if not all([username, employee_id, full_name, phone, role, email]):
         return jsonify({
             "message": "All fields are required"
         }), 400
     
-    result = db.register_user(username, full_name, employee_id, phone, role, password, email)
+    # Store registration data temporarily in session for OTP verification
+    session["pending_registration"] = {
+        "username": username,
+        "employee_id": employee_id,
+        "full_name": full_name,
+        "phone": phone,
+        "password": password,
+        "role": role,
+        "email": email
+    }
     
-    if  result.get("user_id") is not None:
+    # Send OTP to email
+    success, message = otp.send_otp(username, email)
+    if not success:
+        return jsonify({"message": message}), 500
+
+    return jsonify({
+        "redirect": f"/verify-otp?username={username}&context=registration",
+        "message": "OTP sent to your email"
+    }), 200
+
+
+@app.route("/verify-otp-registration", methods=["POST"])
+def verify_otp_registration():
+    """
+    Registration Step 2: Verify OTP and complete registration.
+    """
+    data = request.get_json()
+    username = str(data.get("username", "")).strip()
+    otp_input = str(data.get("otp", "")).strip()
+
+    # Verify OTP
+    verified, message = otp.verify_otp(username, otp_input)
+    if not verified:
+        return jsonify({"message": message}), 400
+
+    # Get pending registration data from session
+    pending_reg = session.get("pending_registration")
+    if not pending_reg or pending_reg.get("username") != username:
+        return jsonify({"message": "Registration session expired. Please register again."}), 400
+
+    # Complete the registration
+    result = db.register_user(
+        pending_reg["username"],
+        pending_reg["full_name"],
+        pending_reg["employee_id"],
+        pending_reg["phone"],
+        pending_reg["role"],
+        pending_reg["password"],
+        pending_reg["email"]
+    )
+
+    if result.get("user_id") is not None:
+        # Clear session data and OTP
+        otp.clear_otp(username)
+        session.pop("pending_registration", None)
         return jsonify({
+            "message": "Registration successful!",
             "redirect": url_for("login_page")
-        })
+        }), 200
 
     return jsonify({
         "message": "Registration failed. Please try again."
     }), 500
+
+
+@app.route("/resend-otp-registration", methods=["POST"])
+def resend_otp_registration():
+    """
+    Resend OTP during registration.
+    """
+    data = request.get_json()
+    username = str(data.get("username", "")).strip()
+
+    pending_reg = session.get("pending_registration")
+    if not pending_reg or pending_reg.get("username") != username:
+        return jsonify({"message": "Registration session expired."}), 400
+
+    email = pending_reg.get("email")
+    success, message = otp.send_otp(username, email)
+    
+    if success:
+        return jsonify({"message": message}), 200
+    else:
+        return jsonify({"message": message}), 500
+
+# =============================================================================
+# OTP Verification
+# =============================================================================
+
+@app.route('/verify-otp', methods=['GET'])
+def verify_otp_page():
+    """Show OTP verification page."""
+    return render_template('verify-otp.html')
+
 
 # =============================================================================
 # Reset Password — 3-step flow:
@@ -229,7 +316,7 @@ def assign_batch():
     data = request.get_json(silent=True) or {}
 
     product_name    = data.get("brand", "").strip()
-    product_code     = data.get("code", "").strip()
+    product_code     = int(data.get("code", "").strip())
     lots     = data.get("lots", [])
     password = data.get("password", "").strip()
 
@@ -263,7 +350,7 @@ def assign_batch():
     try:
         for lot_number in normalised_lots:
           o_status_code, o_status_msg = db.assign_batch(
-              product_code, product_name, lot_number
+              lot_number, product_code, product_name, created_by
           )
           if int(o_status_code) != 1:
               return jsonify({"message": o_status_msg or "Assignment failed"}), 400
@@ -358,7 +445,7 @@ def generate_code():
             "message": "Unauthorized",
             "redirect": url_for("login_page")
         }), 401
-
+    username = session.get("username", "unknown_user")
     data = request.get_json()
     quantity = data.get("count")
     if not quantity or quantity <= 0:
@@ -366,7 +453,7 @@ def generate_code():
             "message": "Invalid code count",
             "redirect": url_for("code")
         }), 400
-    status_code, status_msg = db.generate_codes(quantity)
+    status_code, status_msg = db.generate_codes(quantity, username)
     #status_code = 1
     #status_msg = "Codes generated successfully"
     #time.sleep(2)  # Simulate processing time

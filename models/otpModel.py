@@ -9,7 +9,7 @@ class OTPModel:
     Used for user registration and password reset flows.
     """
 
-    def __init__(self, mail=None, redis_host='localhost', redis_port=6379):
+    def __init__(self, mail=None, redis_host='localhost', redis_port=6079):
         """
         Initialize OTPModel with mail and Redis configuration.
         

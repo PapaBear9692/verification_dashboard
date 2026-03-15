@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     confirmBtn.disabled = true;
-    confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Creating...`;
+    confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Sending OTP...`;
 
     try {
       const response = await fetch("/register", {
@@ -81,17 +81,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!response.ok) {
         alert(data.message || "Registration failed");
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `Confirm`;
       } else {
-        // success → redirect if backend provides it
+        // success → redirect to OTP verification page
         resetRegisterForm();
         modal.hide();
+        // Redirect to verify-otp page with username and context
         window.location.href = data.redirect;
       }
     } catch (err) {
       alert("Server unavailable. Please try again.");
-    } finally {
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = `Confirm`;
+    } finally {
       pendingPayload = null;
     }
   });

@@ -1,9 +1,3 @@
-// static/js/reset.js
-// 3-step password reset flow:
-//   Step 1 → enter username, request OTP
-//   Step 2 → enter 6-digit OTP
-//   Step 3 → enter new password
-
 document.addEventListener("DOMContentLoaded", () => {
 
   /* =====================
@@ -44,6 +38,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const errorBox = createErrorBox();
   document.querySelector(".auth-card").insertBefore(errorBox, step1);
 
+  // Check if OTP was already verified (coming back from verify-otp page)
+  const urlParams = new URLSearchParams(window.location.search);
+  const usernameFromURL = urlParams.get('username');
+  const stepFromURL = urlParams.get('step');
+
+  if (usernameFromURL && stepFromURL === '3') {
+    // User has verified OTP, show password reset step
+    usernameForReset.value = decodeURIComponent(usernameFromURL);
+    goToStep(3);
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   /* =====================
      STEP 1 — Live validation & submit
   ====================== */
@@ -78,13 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Carry username to next step
-      usernameForOtp.value = username;
-
-      // Show hint message (masked email from backend)
-      otpHint.textContent = data.message || "Check your registered email for the OTP.";
-
-      goToStep(2);
+      // Redirect to verify-otp page with username and context
+      window.location.href = `/verify-otp?username=${encodeURIComponent(username)}&context=reset`;
 
     } catch (err) {
       showError("Server unavailable. Please try again.");
@@ -94,8 +96,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =====================
-     STEP 2 — OTP input & verify
+     STEP 2 — OTP input & verify (DEPRECATED - using shared verify-otp page)
   ====================== */
+
+  // This step is now handled by the dedicated verify-otp page
+  // The form handlers below remain for backward compatibility if needed
 
   // Only allow digits, enable button at 6 chars
   otpInput.addEventListener("input", () => {
