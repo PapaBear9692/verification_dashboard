@@ -131,48 +131,6 @@ class ProductDB:
         finally:
             cursor.close()
             conn.close()
-    
-    def check_username_exists(self, username):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        try:
-            o_exists = cursor.var(oracledb.DB_TYPE_NUMBER)
-            cursor.callproc(
-                "verify_username_exists_prc",
-                [
-                    username,
-                    o_exists
-                ]
-            )
-            return o_exists.getvalue() == 1  # Return True if user exists, False otherwise
-        except Exception as e:
-            print("User existence check failed:", e)
-            return False  # Assume user doesn't exist on error
-        finally:
-            cursor.close()
-            conn.close()
-
-    def check_email_exists(self, email):
-        conn = self._get_connection()
-        cursor = conn.cursor()
-
-        try:
-            o_exists = cursor.var(oracledb.DB_TYPE_NUMBER)
-            cursor.callproc(
-                "verify_email_exists_prc",
-                [
-                    email,
-                    o_exists
-                ]
-            )
-            return o_exists.getvalue() == 1  # Return True if email exists, False otherwise
-        except Exception as e:
-            print("Email existence check failed:", e)
-            return False  # Assume email doesn't exist on error
-        finally:
-            cursor.close()
-            conn.close()
 
     
     def get_user_email(self, username):

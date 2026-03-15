@@ -2,6 +2,7 @@ from datetime import datetime
 import time
 import os
 from flask import Flask, jsonify, redirect, render_template, request, url_for, url_for, session
+from flask_mail import Mail
 from models.dbModel import ProductDB
 from models.otpModel import OTPModel
 from dotenv import load_dotenv
@@ -10,8 +11,20 @@ from dotenv import load_dotenv
 app = Flask(__name__)
 load_dotenv()
 app.secret_key = os.getenv("APP.SECRET") 
+
+# --- Configure Flask-Mail ---
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'asifcyberg@gmail.com'
+app.config['MAIL_PASSWORD'] = 'isuvlgwpizgotmll'  # Use 16-character Google App Password
+app.config['MAIL_DEFAULT_SENDER'] = 'asifcyberg@gmail.com'
+
+mail = Mail(app)
+
+# Initialize database and OTP models
 db = ProductDB()
-otp = OTPModel()
+otp = OTPModel(mail=mail)
 
 
 # -------------Landing Page--------------
@@ -84,17 +97,6 @@ def register_user():
             "message": "All fields are required"
         }), 400
     
-    # Check if username or email already exists in the database
-    if db.check_username_exists(username):
-        return jsonify({
-            "message": "Username already exists"
-        }), 400
-    if db.check_email_exists(email):
-        return jsonify({
-            "message": "Email already registered"
-        }), 400
-    
-
     result = db.register_user(username, full_name, employee_id, phone, role, password, email)
     
     if  result.get("user_id") is not None:
@@ -189,7 +191,7 @@ def reset_password():
     reset_success, status_msg = db.reset_password(username, new_password, confirm_password)
 
     if reset_success:
-        otp.clear_otp()   # clean up session OTP data after successful reset
+        otp.clear_otp(username)   # clean up session OTP data after successful reset
         return jsonify({"message": status_msg or "Password reset successfully."}), 200
     else:
         return jsonify({"message": status_msg or "Failed to reset password."}), 500

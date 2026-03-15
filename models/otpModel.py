@@ -1,158 +1,151 @@
-import random
-import os
-from datetime import datetime, timedelta
-from flask import session
-from dotenv import load_dotenv
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-
-load_dotenv()
-
-# ---------------------------------------------------------------------------
-# Configuration — add these to your .env file:
-#
-#   SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxx
-#   SENDGRID_SENDER=yourverifiedemail@gmail.com
-# ---------------------------------------------------------------------------
-
-SENDGRID_API_KEY   = os.getenv("SENDGRID_API_KEY")
-SENDGRID_SENDER    = os.getenv("SENDGRID_SENDER")
-OTP_EXPIRY_MINUTES = 10
+import secrets
+import redis
+from flask_mail import Message
 
 
 class OTPModel:
+    """
+    OTP Model for handling OTP generation, sending, and verification.
+    Used for user registration and password reset flows.
+    """
 
-    # ------------------------------------------------------------------
-    # SEND OTP
-    # Generates a 6-digit OTP, stores it in Flask session, emails it.
-    # Returns (True, "message") on success, (False, "error") on failure.
-    # ------------------------------------------------------------------
-    def send_otp(self, username: str, email: str) -> tuple[bool, str]:
-        otp = str(random.randint(100000, 999999))
-        expiry = (datetime.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)).isoformat()
-
-        # Store in session — keyed by username so concurrent users don't clash
-        session["otp_data"] = {
-            "username": username,
-            "otp":      otp,
-            "expiry":   expiry,
-            "verified": False,
-        }
-
-        success, msg = self._send_email(email, otp)
-        if not success:
-            session.pop("otp_data", None)   # clean up on send failure
-            return False, msg
-
-        masked = self._mask_email(email)
-        return True, f"OTP sent to {masked}. Valid for {OTP_EXPIRY_MINUTES} minutes."
-
-
-    # ------------------------------------------------------------------
-    # VERIFY OTP
-    # Checks the OTP the user typed against what we stored in session.
-    # Returns (True, "ok") or (False, "reason").
-    # ------------------------------------------------------------------
-    def verify_otp(self, username: str, otp_input: str) -> tuple[bool, str]:
-        otp_data = session.get("otp_data")
-
-        if not otp_data:
-            return False, "No OTP request found. Please request a new OTP."
-
-        if otp_data.get("username") != username:
-            return False, "Username mismatch. Please request a new OTP."
-
-        expiry = datetime.fromisoformat(otp_data["expiry"])
-        if datetime.now() > expiry:
-            session.pop("otp_data", None)
-            return False, "OTP has expired. Please request a new one."
-
-        if otp_data.get("otp") != str(otp_input).strip():
-            return False, "Incorrect OTP. Please try again."
-
-        # Mark as verified — app.py reset route checks this flag
-        session["otp_data"]["verified"] = True
-        return True, "OTP verified successfully."
-
-
-    # ------------------------------------------------------------------
-    # IS VERIFIED?
-    # Used by app.py before allowing the final password reset.
-    # ------------------------------------------------------------------
-    def is_otp_verified(self, username: str) -> bool:
-        otp_data = session.get("otp_data")
-        if not otp_data:
-            return False
-        if otp_data.get("username") != username:
-            return False
-        if not otp_data.get("verified"):
-            return False
-        expiry = datetime.fromisoformat(otp_data["expiry"])
-        if datetime.now() > expiry:
-            session.pop("otp_data", None)
-            return False
-        return True
-
-
-    # ------------------------------------------------------------------
-    # CLEAR OTP
-    # Called after a successful password reset to clean up session.
-    # ------------------------------------------------------------------
-    def clear_otp(self):
-        session.pop("otp_data", None)
-
-
-    # ------------------------------------------------------------------
-    # INTERNAL: Send email via SendGrid HTTP API (no SMTP, uses port 443)
-    # ------------------------------------------------------------------
-    def _send_email(self, recipient: str, otp: str) -> tuple[bool, str]:
-        if not SENDGRID_API_KEY or not SENDGRID_SENDER:
-            return False, "Email service is not configured. Contact your administrator."
-
-        body = f"""Hello,
-
-Your One-Time Password (OTP) for resetting your Square Pharmaceuticals
-Verification Portal password is:
-
-        {otp}
-
-This OTP is valid for {OTP_EXPIRY_MINUTES} minutes.
-If you did not request this, please ignore this email.
-
-— Square Pharmaceuticals PLC. IT Team"""
-
-        message = Mail(
-            from_email=SENDGRID_SENDER,
-            to_emails=recipient,
-            subject="Square Pharma — Password Reset OTP",
-            plain_text_content=body,
-        )
-
+    def __init__(self, mail=None, redis_host='localhost', redis_port=6379):
+        """
+        Initialize OTPModel with mail and Redis configuration.
+        
+        Args:
+            mail: Flask-Mail instance from the main app
+            redis_host: Redis server host (default: localhost)
+            redis_port: Redis server port (default: 6379)
+        """
+        self.mail = mail
+        self.verified_otps = {}  # Track verified OTPs in session: {username: True/False}
+        
+        # Initialize Redis connection
         try:
-            sg = SendGridAPIClient(SENDGRID_API_KEY)
-            response = sg.send(message)
-
-            # SendGrid returns 2xx on success
-            if response.status_code in (200, 201, 202):
-                return True, "Email sent."
-            else:
-                return False, f"SendGrid returned status {response.status_code}."
-
+            self.redis_conn = redis.Redis(
+                host=redis_host, 
+                port=redis_port, 
+                decode_responses=True
+            )
+            # Test connection
+            self.redis_conn.ping()
         except Exception as e:
-            return False, f"Failed to send email: {str(e)}"
+            print(f"Redis Connection Error: {e}")
+            self.redis_conn = None
 
+    def generate_otp(self):
+        """
+        Generate a 6-digit OTP.
+        
+        Returns:
+            str: 6-digit OTP code
+        """
+        return ''.join([str(secrets.randbelow(10)) for _ in range(6)])
 
-    # ------------------------------------------------------------------
-    # INTERNAL: Mask email for display
-    # john.doe@squaregroup.com  →  j*******e@squaregroup.com
-    # ------------------------------------------------------------------
-    def _mask_email(self, email: str) -> str:
+    def send_otp(self, username, email):
+        """
+        Generate OTP, store in Redis, and send via email.
+        
+        Args:
+            username (str): Username of the user
+            email (str): Email address to send OTP to
+            
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        if not self.mail:
+            return False, "Mail service not configured"
+        
+        if not self.redis_conn:
+            return False, "Redis connection failed"
+        
+        if not email:
+            return False, "Email is required"
+
         try:
-            local, domain = email.split("@", 1)
-            if len(local) <= 2:
-                masked_local = "*" * len(local)
+            otp_code = self.generate_otp()
+            
+            # Store OTP in Redis for 5 minutes (300 seconds)
+            # Key format: otp:{username}
+            self.redis_conn.setex(f"otp:{username}", 300, otp_code)
+            
+            # Send OTP via email
+            msg = Message(
+                "Your OTP for Password Reset",
+                recipients=[email]
+            )
+            msg.body = (
+                f"Hello {username},\n\n"
+                f"Your OTP for account recovery is: {otp_code}\n\n"
+                f"This code will expire in 5 minutes.\n\n"
+                f"If you did not request this OTP, please ignore this email."
+            )
+            self.mail.send(msg)
+            
+            return True, "OTP successfully sent to your email"
+        except Exception as e:
+            return False, f"Failed to send OTP: {str(e)}"
+
+    def verify_otp(self, username, otp_input):
+        """
+        Verify the OTP provided by the user.
+        
+        Args:
+            username (str): Username of the user
+            otp_input (str): OTP provided by the user
+            
+        Returns:
+            tuple: (verified: bool, message: str)
+        """
+        if not self.redis_conn:
+            return False, "Redis connection failed"
+        
+        if not username or not otp_input:
+            return False, "Username and OTP are required"
+
+        try:
+            stored_otp = self.redis_conn.get(f"otp:{username}")
+            
+            if not stored_otp:
+                return False, "OTP has expired or is invalid"
+            
+            if stored_otp == str(otp_input).strip():
+                # Mark OTP as verified in session
+                self.verified_otps[username] = True
+                # Don't delete yet - user might need to reset password
+                return True, "OTP verified successfully"
             else:
-                masked_local = local[0] + "*" * (len(local) - 2) + local[-1]
-            return f"{masked_local}@{domain}"
-        except Exception:
-            return "your registered email"
+                return False, "Invalid OTP"
+        except Exception as e:
+            return False, f"OTP verification failed: {str(e)}"
+
+    def is_otp_verified(self, username):
+        """
+        Check if OTP has been verified for the user in this session.
+        
+        Args:
+            username (str): Username to check
+            
+        Returns:
+            bool: True if OTP was verified, False otherwise
+        """
+        return self.verified_otps.get(username, False)
+
+    def clear_otp(self, username=None):
+        """
+        Clear OTP data after successful password reset.
+        
+        Args:
+            username (str, optional): Specific username to clear. If None, clears all.
+        """
+        if username:
+            # Clear specific user's verified flag
+            if username in self.verified_otps:
+                del self.verified_otps[username]
+            # Delete OTP from Redis
+            if self.redis_conn:
+                self.redis_conn.delete(f"otp:{username}")
+        else:
+            # Clear all verified OTPs
+            self.verified_otps.clear()
