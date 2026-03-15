@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmUsername = document.getElementById("confirmUsername");
   const confirmPhone = document.getElementById("confirmPhone");
   const confirmRole = document.getElementById("confirmRole");
-  const confirmEmail = document.getElementById("confirmEmail");
+  // FIX 2: Removed dead confirmEmail reference — no matching id exists in the modal HTML
 
   // keep data until user clicks Confirm
   let pendingPayload = null;
@@ -108,11 +108,13 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function getPasswordRules(value) {
     return {
-      minLength:   value.length >= 8,
-      noSpace:     !/\s/.test(value),
-      hasLower:    /[a-z]/.test(value),
-      hasUpper:    /[A-Z]/.test(value),
-      hasNumber:   /[0-9]/.test(value),
+      minLength:  value.length >= 8,
+      maxLength:  value.length <= 16,
+      noSpace:    !/\s/.test(value),
+      hasLower:   /[a-z]/.test(value),
+      hasUpper:   /[A-Z]/.test(value),
+      hasNumber:  /[0-9]/.test(value),
+      hasSpecial: /[^a-zA-Z0-9\s]/.test(value),
     };
   }
 
@@ -135,11 +137,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const items = [
-      { key: "minLength", label: "At least 8 characters" },
-      { key: "noSpace",   label: "No spaces allowed" },
-      { key: "hasLower",  label: "At least one lowercase letter (a–z)" },
-      { key: "hasUpper",  label: "At least one uppercase letter (A–Z)" },
-      { key: "hasNumber", label: "At least one number (0–9)" },
+      { key: "minLength",  label: "At least 8 characters" },
+      { key: "maxLength",  label: "No more than 16 characters" },
+      { key: "noSpace",    label: "No spaces allowed" },
+      { key: "hasLower",   label: "At least one lowercase letter (a–z)" },
+      { key: "hasUpper",   label: "At least one uppercase letter (A–Z)" },
+      { key: "hasNumber",  label: "At least one number (0–9)" },
+      { key: "hasSpecial", label: "At least one special character (!@#$…)" },
     ];
 
     container.innerHTML = items
@@ -157,7 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
    */
   function isPasswordValid(value) {
     const r = getPasswordRules(value);
-    return r.minLength && r.noSpace && r.hasLower && r.hasUpper && r.hasNumber;
+    return r.minLength && r.maxLength && r.noSpace &&
+           r.hasLower && r.hasUpper && r.hasNumber && r.hasSpecial;
   }
 
   function checkPasswordMatch() {
@@ -199,6 +204,43 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   confirmPasswordInput.addEventListener("input", checkPasswordMatch);
+
+  /* =====================
+     PHONE — REAL-TIME NUMERIC FILTER
+     Strips any non-digit character as the user types,
+     so letters / symbols can never be entered.
+  ====================== */
+  phoneInput.addEventListener("input", () => {
+    // Remove every character that is not a digit
+    phoneInput.value = phoneInput.value.replace(/\D/g, "");
+
+    // Clear stale error while user is still typing
+    document.getElementById("phoneError").textContent = "";
+  });
+
+  /* =====================
+     PHONE — BLUR VALIDATION
+     FIX 3: Shows required error if field is empty on blur,
+     consistent with phone now being a required field.
+  ====================== */
+  phoneInput.addEventListener("blur", () => {
+    const val = phoneInput.value;
+    const phoneError = document.getElementById("phoneError");
+
+    // FIX 3: Phone is required — show error if left empty
+    if (!val) {
+      phoneError.textContent = "Phone number is required";
+      phoneError.classList.add("text-danger");
+      return;
+    }
+
+    if (!/^01\d{9}$/.test(val)) {
+      phoneError.textContent = "Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)";
+      phoneError.classList.add("text-danger");
+    } else {
+      phoneError.textContent = "";
+    }
+  });
 
   /* =====================
      EXPOSE GLOBAL FUNCTIONS
@@ -250,7 +292,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Clear previous errors
     document.querySelectorAll(".text-danger").forEach(el => (el.textContent = ""));
 
-    if (!p.username || !p.employeeID || !p.fullName || !p.password || !p.confirmPassword || !p.role) {
+    // FIX 1: Added !p.phone to the required fields guard
+    if (!p.username || !p.employeeID || !p.fullName || !p.phone || !p.password || !p.confirmPassword || !p.role) {
       showErrorMessage("username", "All required fields must be filled");
       hasError = true;
     }
@@ -265,7 +308,8 @@ document.addEventListener("DOMContentLoaded", () => {
       hasError = true;
     }
 
-    if (p.phone && !/^01\d{9}$/.test(p.phone)) {
+    // FIX 1: Phone is now required — always validate format (removed the optional `p.phone &&` guard)
+    if (!/^01\d{9}$/.test(p.phone)) {
       showErrorMessage("phone", "Phone must be 11 digits and start with 01 (e.g., 01XXXXXXXXX)");
       hasError = true;
     }
@@ -282,6 +326,9 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (p.password.length < 8) {
       showErrorMessage("password", "Password must be at least 8 characters long");
       hasError = true;
+    } else if (p.password.length > 16) {
+      showErrorMessage("password", "Password must not exceed 16 characters");
+      hasError = true;
     } else if (!/[a-z]/.test(p.password)) {
       showErrorMessage("password", "Password must contain at least one lowercase letter");
       hasError = true;
@@ -290,6 +337,9 @@ document.addEventListener("DOMContentLoaded", () => {
       hasError = true;
     } else if (!/[0-9]/.test(p.password)) {
       showErrorMessage("password", "Password must contain at least one number (0–9)");
+      hasError = true;
+    } else if (!/[^a-zA-Z0-9\s]/.test(p.password)) {
+      showErrorMessage("password", "Password must contain at least one special character");
       hasError = true;
     }
     // ────────────────────────────────────────────────────────────────
@@ -326,6 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (rulesEl) rulesEl.innerHTML = "";
 
     document.getElementById("confirmPasswordError").textContent = "";
+    document.getElementById("phoneError").textContent = "";
     registerBtn.disabled = true;
   }
 
