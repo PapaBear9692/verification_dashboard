@@ -300,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     isSubmitting = true;
     confirmBtn.disabled = true;
-    confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Sending OTP...`;
+    confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Validating...`;
 
     try {
       const response = await fetch("/register", {
@@ -313,13 +313,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!response.ok) {
         showToast(data.message || "Registration failed");
+        modal.hide();
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = `Confirm`;
         isSubmitting = false;
       } else {
         resetRegisterForm();
         modal.hide();
-        window.location.href = data.redirect;
+        confirmBtn.innerHTML = `<i class="fas fa-check me-1"></i> OTP Sent`;
+        setTimeout(() => {
+          window.location.href = data.redirect;
+        }, 500);
       }
     } catch {
       showToast("Server unavailable. Please try again.");

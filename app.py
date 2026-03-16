@@ -81,8 +81,6 @@ def register_user():
     confirm_password = str(data.get("confirmPassword")).strip()
     role = str(data.get("role")).strip()
     email = str(data.get("email")).strip()
-    
-    print(f"[DEBUG] /register POST endpoint called for username: {username}, email: {email}")
 
     # Password validation
     if len(password) < 8 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
@@ -110,7 +108,7 @@ def register_user():
             "message": "Username, email, or employee ID already exists"
         }), 400
     
-    
+
     # Store registration data temporarily in session for OTP verification
     session["pending_registration"] = {
         "username": username,
@@ -123,9 +121,7 @@ def register_user():
     }
     
     # Send OTP to email
-    print(f"[DEBUG] About to send OTP for username: {username}")
     success, message = otp.send_register_otp(username, email)
-    print(f"[DEBUG] OTP send result - success: {success}, message: {message}")
     if not success:
         return jsonify({"message": message}), 500
 
