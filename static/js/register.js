@@ -58,11 +58,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const TOASTIFY_CONFIG = {
+    text,
     duration: 4000,
     gravity: "top",
-    position: "right",
-    backgroundColor: "#ff6b6b"
+    position: "center",
+    style: { background: type === "error" ? "#b00020" : "#02630c" },
   };
+  
 
   const PASSWORD_RULES_STYLE = "list-style:none;padding:0.4rem 0 0;margin:0;font-size:0.78rem;line-height:1.8;";
 
@@ -309,21 +311,14 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(pendingPayload)
       });
 
-      console.log("[DEBUG] Fetch response status:", response.status);
-      
       let data = {};
       try {
         data = await response.json();
       } catch (e) {
-        console.log("[DEBUG] Failed to parse JSON:", e);
         data = {};
       }
       
-      console.log("[DEBUG] Response data:", data);
-      console.log("[DEBUG] Response OK:", response.ok);
-
       if (!response.ok) {
-        console.log("[DEBUG] Error response, showing toast");
         showToast(data.message || "Registration failed");
         modal.hide();
         confirmBtn.disabled = false;
@@ -335,7 +330,6 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.reload();
         }, 3000);
       } else {
-        console.log("[DEBUG] Success response");
         resetRegisterForm();
         modal.hide();
         confirmBtn.innerHTML = `<i class="fas fa-check me-1"></i> OTP Sent`;
@@ -344,7 +338,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 500);
       }
     } catch (error) {
-      console.log("[DEBUG] Fetch error:", error);
       showToast("Server unavailable. Please try again.");
       modal.hide();
       confirmBtn.disabled = false;
