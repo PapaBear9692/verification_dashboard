@@ -72,67 +72,72 @@ def register_user():
     """
     Registration Step 1: Validate user data and send OTP to email.
     """
-    data = request.get_json()
-    username = str(data.get("username")).strip()
-    employee_id = str(data.get("employeeId")).strip()
-    full_name = str(data.get("fullName")).strip()
-    phone = str(data.get("phone")).strip()
-    password = str(data.get("password")).strip()
-    confirm_password = str(data.get("confirmPassword")).strip()
-    role = str(data.get("role")).strip()
-    email = str(data.get("email")).strip()
-    
-    print(f"[DEBUG] /register POST endpoint called for username: {username}, email: {email}")
+    try:
+        data = request.get_json()
+        username = str(data.get("username")).strip()
+        employee_id = str(data.get("employeeId")).strip()
+        full_name = str(data.get("fullName")).strip()
+        phone = str(data.get("phone")).strip()
+        password = str(data.get("password")).strip()
+        confirm_password = str(data.get("confirmPassword")).strip()
+        role = str(data.get("role")).strip()
+        email = str(data.get("email")).strip()
+        
+        print(f"[DEBUG] /register POST endpoint called for username: {username}, email: {email}")
 
-    # Password validation
-    if len(password) < 8 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
-        return jsonify({
-            "message": "Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character"
-        }), 400
+        # Password validation
+        if len(password) < 8 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+            return jsonify({
+                "message": "Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character"
+            }), 400
 
-    if password != confirm_password:
-        return jsonify({
-            "message": "Passwords do not match"
-        }), 400
-    
-    # Validate all fields are present
-    if not all([username, employee_id, full_name, phone, role, email]):
-        return jsonify({
-            "message": "All fields are required"
-        }), 400
-    
-    # Check db is username / email / employee_id already exists
-    result = db.register_user(
-        username, full_name, employee_id, phone, role, password, email, mode="otp"
-    )
-    if result.get("user_id") is not None:
-        return jsonify({
-            "message": "Username, email, or employee ID already exists"
-        }), 400
-    
+        if password != confirm_password:
+            return jsonify({
+                "message": "Passwords do not match"
+            }), 400
+        
+        # Validate all fields are present
+        if not all([username, employee_id, full_name, phone, role, email]):
+            return jsonify({
+                "message": "All fields are required"
+            }), 400
+        
+        # Check db is username / email / employee_id already exists
+        result = db.register_user(
+            username, full_name, employee_id, phone, role, password, email, mode="otp"
+        )
+        if result.get("user_id") is not None:
+            return jsonify({
+                "message": "Username, email, or employee ID already exists"
+            }), 400
+        
 
-    # Store registration data temporarily in session for OTP verification
-    session["pending_registration"] = {
-        "username": username,
-        "employee_id": employee_id,
-        "full_name": full_name,
-        "phone": phone,
-        "password": password,
-        "role": role,
-        "email": email
-    }
-    
-    # Send OTP to email
-    print(f"[DEBUG] About to send OTP for username: {username}")
-    success, message = otp.send_register_otp(username, email)
-    print(f"[DEBUG] OTP send result - success: {success}, message: {message}")
-    if not success:
-        return jsonify({"message": message}), 500
+        # Store registration data temporarily in session for OTP verification
+        session["pending_registration"] = {
+            "username": username,
+            "employee_id": employee_id,
+            "full_name": full_name,
+            "phone": phone,
+            "password": password,
+            "role": role,
+            "email": email
+        }
+        
+        # Send OTP to email
+        print(f"[DEBUG] About to send OTP for username: {username}")
+        success, message = otp.send_register_otp(username, email)
+        print(f"[DEBUG] OTP send result - success: {success}, message: {message}")
+        if not success:
+            return jsonify({"message": message}), 500
 
-    return jsonify({
-        "redirect": f"/verify-otp?username={username}&context=registration",
-        "message": "OTP sent to your email"
-    }), 200
+        return jsonify({
+            "redirect": f"/verify-otp?username={username}&context=registration",
+            "message": "OTP sent to your email"
+        }), 200
+        
+    except Exception as e:
+        print(f"[DEBUG] Exception in register_user: {str(e)}")
+        return jsonify({"message": f"Registration error: {str(e)}"}), 500
 
 
 @app.route("/verify-otp-registration", methods=["POST"])

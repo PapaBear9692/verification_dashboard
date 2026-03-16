@@ -309,15 +309,33 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(pendingPayload)
       });
 
-      const data = await response.json().catch(() => ({}));
+      console.log("[DEBUG] Fetch response status:", response.status);
+      
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (e) {
+        console.log("[DEBUG] Failed to parse JSON:", e);
+        data = {};
+      }
+      
+      console.log("[DEBUG] Response data:", data);
+      console.log("[DEBUG] Response OK:", response.ok);
 
       if (!response.ok) {
+        console.log("[DEBUG] Error response, showing toast");
         showToast(data.message || "Registration failed");
         modal.hide();
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = `Confirm`;
         isSubmitting = false;
+        
+        // Refresh page after 3 seconds to allow user to see the error notification
+        setTimeout(() => {
+          window.location.reload();
+        }, 3000);
       } else {
+        console.log("[DEBUG] Success response");
         resetRegisterForm();
         modal.hide();
         confirmBtn.innerHTML = `<i class="fas fa-check me-1"></i> OTP Sent`;
@@ -325,11 +343,18 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.href = data.redirect;
         }, 500);
       }
-    } catch {
+    } catch (error) {
+      console.log("[DEBUG] Fetch error:", error);
       showToast("Server unavailable. Please try again.");
+      modal.hide();
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = `Confirm`;
       isSubmitting = false;
+      
+      // Refresh page after 3 seconds to allow user to see the error notification
+      setTimeout(() => {
+        window.location.reload();
+      }, 6000);
     } finally {
       pendingPayload = null;
     }
