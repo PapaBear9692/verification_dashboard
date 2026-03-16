@@ -71,8 +71,9 @@
                   inputmode="numeric"
                   class="form-control"
                   name="employeeID"
-                  placeholder="e.g. 0000001667"
-                  maxlength="10"
+                  placeholder="e.g. 00012345"
+                  maxlength="8"
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                   required
                 />
                 <span id="employeeIDError" class="text-danger"></span>
