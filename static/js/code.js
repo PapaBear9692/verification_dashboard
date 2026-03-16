@@ -114,10 +114,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.logoutUser = async function () {
     try {
       const response = await fetch("/logout", {
-        method: "POST",
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFToken": document.querySelector('input[name="csrf_token"]').value,
         },
       });
 

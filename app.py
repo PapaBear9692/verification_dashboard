@@ -13,7 +13,34 @@ from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
 
 app = Flask(__name__)
-talisman = Talisman(app)
+talisman = Talisman(
+    app,
+    content_security_policy={
+        'default-src': "'self'",
+        'script-src': [
+            "'self'",
+            'https://code.jquery.com/',
+            'https://cdnjs.cloudflare.com/',
+            'https://stackpath.bootstrapcdn.com/',
+            "'unsafe-inline'"
+        ],
+        'style-src': [
+            "'self'",
+            'https://stackpath.bootstrapcdn.com/',
+            'https://cdnjs.cloudflare.com/',
+            'https://fonts.googleapis.com/',
+            "'unsafe-inline'"
+        ],
+        'font-src': [
+            'https://fonts.gstatic.com',
+            'https://cdnjs.cloudflare.com/'
+        ],
+        'connect-src': [
+            "'self'",
+            'https://stackpath.bootstrapcdn.com/'
+        ]
+    }
+)
 app.config.from_object({
     "SECRET_KEY": os.getenv("APP.SECRET")
 })
@@ -501,8 +528,10 @@ def generate_code():
         "status_code": status_code
     }), 200
 
+csrf.exempt_paths = ['/logout']
+
 # -------------Logout--------------
-@app.route("/logout")
+@app.route("/logout", methods=['GET'])
 def logout():
     session.clear()
     return jsonify({
