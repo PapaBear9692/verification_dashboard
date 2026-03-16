@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
         minLength: "Username must be at least 3 characters"
       }
     },
-    employeeID: {
+    employeeId: {
       required: true,
       pattern: /^\d{8}$/,
       message: {
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===== DOM Elements =====
   const form = document.getElementById("registerForm");
   const usernameInput = document.getElementById("username");
-  const employeeIdInput = document.getElementById("employeeID");
+  const employeeIdInput = document.getElementById("employeeId");
   const fullNameInput = document.getElementById("fullName");
   const phoneInput = document.getElementById("phone");
   const passwordInput = document.getElementById("password");
@@ -89,10 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== State =====
   let pendingPayload = null;
-
-  // ===== Initialization =====
-  setTimeZoneHiddenInput();
-  registerBtn.disabled = true;
 
   // ===== Initialization =====
   setTimeZoneHiddenInput();
@@ -152,14 +148,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Employee ID validation
   employeeIdInput.addEventListener("input", () => {
     const value = employeeIdInput.value.trim();
-    const rule = VALIDATION_RULES.employeeID;
+    const rule = VALIDATION_RULES.employeeId;
 
     if (!value) {
-      setErrorMessage("employeeID", rule.message.required);
+      setErrorMessage("employeeId", rule.message.required);
     } else if (!rule.pattern.test(value)) {
-      setErrorMessage("employeeID", rule.message.pattern);
+      setErrorMessage("employeeId", rule.message.pattern);
     } else {
-      setErrorMessage("employeeID", "");
+      setErrorMessage("employeeId", "");
     }
   });
 
@@ -352,7 +348,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clearAllErrors();
 
     // Required fields validation
-    if (!p.username || !p.employeeID || !p.fullName || !p.phone || !p.password || !p.confirmPassword || !p.role) {
+    if (!p.username || !p.employeeId || !p.fullName || !p.phone || !p.password || !p.confirmPassword || !p.role) {
       setErrorMessage("username", "All required fields must be filled");
       return "Please correct the errors above.";
     }
@@ -363,8 +359,8 @@ document.addEventListener("DOMContentLoaded", () => {
       hasError = true;
     }
 
-    if (!VALIDATION_RULES.employeeID.pattern.test(p.employeeID)) {
-      setErrorMessage("employeeID", VALIDATION_RULES.employeeID.message.pattern);
+    if (!VALIDATION_RULES.employeeId.pattern.test(p.employeeId)) {
+      setErrorMessage("employeeId", VALIDATION_RULES.employeeId.message.pattern);
       hasError = true;
     }
 
