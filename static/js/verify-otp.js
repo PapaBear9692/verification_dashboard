@@ -1,187 +1,215 @@
+// static/js/verify-otp.js
+
 document.addEventListener('DOMContentLoaded', function() {
+  // ===== Configuration =====
+  const CONFIG = {
+    otp: {
+      length: 6,
+      regex: /^\d{6}$/
+    },
+    timer: {
+      resend: 120, // 2 minutes in seconds
+      redirectDelay: 1500
+    },
+    endpoints: {
+      registration: { verify: '/verify-otp-registration', resend: '/resend-otp-registration' },
+      reset: { verify: '/reset/verify-otp', resend: '/reset/send-otp' }
+    }
+  };
+
+  const UI_TEXT = {
+    resend: { default: 'Resend OTP', sending: 'Resending...' },
+    verify: { default: 'Verify OTP', loading: 'Verifying...' },
+    notifications: {
+      invalidInput: { title: 'Invalid Input', message: 'Please enter a valid 6-digit code' },
+      verifySuccess: { title: 'Success', message: 'OTP verified successfully!' },
+      verifyFailed: { title: 'Verification Failed', message: 'Invalid or expired OTP' },
+      otpSent: { title: 'OTP Sent', message: 'A new OTP has been sent to your email' },
+      error: { title: 'Error', message: 'An error occurred. Please try again.' }
+    }
+  };
+
+  // ===== DOM Elements =====
   const otpInput = document.getElementById('otpInput');
   const verifyBtn = document.getElementById('verifyBtn');
   const verifyForm = document.getElementById('verifyOtpForm');
   const resendBtn = document.getElementById('resendBtn');
+  const resendCounter = document.getElementById('resendCounter');
+  const countdown = document.getElementById('countdown');
+  const resendText = document.getElementById('resendText');
   const backLink = document.getElementById('backLink');
+  const usernameInput = document.getElementById('username');
+  const contextInput = document.getElementById('context');
+  const otpError = document.getElementById('otpError');
   const notificationToast = new bootstrap.Toast(document.getElementById('notificationToast'));
   const toastTitle = document.getElementById('toastTitle');
   const toastMessage = document.getElementById('toastMessage');
-  
-  // Get username and context from URL parameters
+
+  // ===== Get URL Parameters =====
   const urlParams = new URLSearchParams(window.location.search);
   const username = urlParams.get('username');
-  const context = urlParams.get('context'); // 'registration' or 'reset'
+  const context = urlParams.get('context');
 
-  // Set hidden input values
-  document.getElementById('username').value = username;
-  document.getElementById('context').value = context;
+  // ===== Initialize =====
+  usernameInput.value = username;
+  contextInput.value = context;
+  setBackLink();
+  startResendCountdown(); // Start timer on page load
 
-  // Set back link based on context
-  if (context === 'registration') {
-    backLink.href = '/register';
-    backLink.textContent = 'Back to Registration';
-  } else if (context === 'reset') {
-    backLink.href = '/reset';
-    backLink.textContent = 'Back to Password Reset';
+  // ===== Helper Functions =====
+
+  function setBackLink() {
+    const links = {
+      registration: { href: '/register', text: 'Back to Registration' },
+      reset: { href: '/reset', text: 'Back to Password Reset' }
+    };
+
+    const link = links[context] || links.registration;
+    backLink.href = link.href;
+    backLink.textContent = link.text;
   }
 
-  // Enable/disable verify button based on OTP input
+  function showNotification(type, customTitle = null, customMessage = null) {
+    const notification = UI_TEXT.notifications[type] || UI_TEXT.notifications.error;
+    toastTitle.textContent = customTitle || notification.title;
+    toastMessage.textContent = customMessage || notification.message;
+
+    const toastElement = document.getElementById('notificationToast');
+    toastElement.className = 'toast';
+    if (type === 'verifySuccess' || type === 'otpSent') {
+      toastElement.classList.add('text-success');
+    } else if (type === 'error' || type === 'verifyFailed' || type === 'invalidInput') {
+      toastElement.classList.add('text-danger');
+    }
+
+    notificationToast.show();
+  }
+
+  function updateResendCounter(seconds) {
+    countdown.textContent = seconds;
+  }
+
+  function setButtonLoading(button, isLoading, text) {
+    button.disabled = isLoading;
+    button.classList.toggle('is-loading', isLoading);
+  }
+
+  function getEndpoint() {
+    return CONFIG.endpoints[context];
+  }
+
+  function clearOtpError() {
+    otpInput.classList.remove('is-invalid');
+    otpError.textContent = '';
+  }
+
+  // ===== OTP Input Validation =====
+
   otpInput.addEventListener('input', function() {
-    if (this.value.length === 6 && /^\d{6}$/.test(this.value)) {
+    clearOtpError();
+
+    if (this.value.length === CONFIG.otp.length && CONFIG.otp.regex.test(this.value)) {
       verifyBtn.disabled = false;
     } else {
       verifyBtn.disabled = true;
     }
   });
 
-  // Handle OTP verification
+  // ===== OTP Verification =====
+
   verifyForm.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
     const otp = otpInput.value.trim();
-    
-    if (!otp || otp.length !== 6) {
-      showNotification('Invalid Input', 'Please enter a valid 6-digit code', 'error');
+
+    if (!otp || otp.length !== CONFIG.otp.length) {
+      showNotification('invalidInput');
       return;
     }
 
-    verifyBtn.disabled = true;
-    verifyBtn.classList.add('is-loading');
+    setButtonLoading(verifyBtn, true);
 
     try {
-      let endpoint, payload;
-
-      if (context === 'registration') {
-        // For registration, verify OTP
-        endpoint = '/verify-otp-registration';
-        payload = {
-          username: username,
-          otp: otp
-        };
-      } else if (context === 'reset') {
-        // For password reset, verify OTP
-        endpoint = '/reset/verify-otp';
-        payload = {
-          username: username,
-          otp: otp
-        };
-      }
-
+      const endpoint = getEndpoint().verify;
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, otp })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        showNotification('Success', 'OTP verified successfully!', 'success');
-        
-        // Redirect based on context
+        showNotification('verifySuccess');
+
         setTimeout(() => {
           if (context === 'registration') {
-            window.location.href = '/login?verified=true&username=' + encodeURIComponent(username);
+            window.location.href = `/login?verified=true&username=${encodeURIComponent(username)}`;
           } else if (context === 'reset') {
-            window.location.href = '/reset?step=3&username=' + encodeURIComponent(username);
+            window.location.href = `/reset?step=3&username=${encodeURIComponent(username)}`;
           }
-        }, 1500);
+        }, CONFIG.timer.redirectDelay);
       } else {
-        showNotification('Verification Failed', data.message || 'Invalid or expired OTP', 'error');
+        showNotification('verifyFailed', null, data.message);
         otpInput.classList.add('is-invalid');
-        verifyBtn.disabled = false;
-        verifyBtn.classList.remove('is-loading');
+        setButtonLoading(verifyBtn, false);
       }
-    } catch (error) {
-      showNotification('Error', 'An error occurred. Please try again.', 'error');
-      verifyBtn.disabled = false;
-      verifyBtn.classList.remove('is-loading');
+    } catch {
+      showNotification('error');
+      setButtonLoading(verifyBtn, false);
     }
   });
 
-  // Handle resend OTP
+  // ===== Resend OTP =====
+
   resendBtn.addEventListener('click', async function() {
-    resendBtn.disabled = true;
-    
+    setButtonLoading(resendBtn, true);
+
     try {
-      let endpoint, payload;
-
-      if (context === 'registration') {
-        endpoint = '/resend-otp-registration';
-        payload = { username: username };
-      } else if (context === 'reset') {
-        endpoint = '/reset/send-otp';
-        payload = { username: username };
-      }
-
+      const endpoint = getEndpoint().resend;
       const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        showNotification('OTP Sent', 'A new OTP has been sent to your email', 'success');
-        startResendCountdown();
+        showNotification('otpSent');
         otpInput.value = '';
-        otpInput.classList.remove('is-invalid');
+        clearOtpError();
         verifyBtn.disabled = true;
+        startResendCountdown();
       } else {
-        showNotification('Error', data.message || 'Failed to resend OTP', 'error');
-        resendBtn.disabled = false;
+        showNotification('error', null, data.message);
+        setButtonLoading(resendBtn, false);
       }
-    } catch (error) {
-      showNotification('Error', 'An error occurred. Please try again.', 'error');
-      resendBtn.disabled = false;
+    } catch {
+      showNotification('error');
+      setButtonLoading(resendBtn, false);
     }
   });
 
-  // Countdown timer for resend
+  // ===== Resend Countdown Timer (2 minutes) =====
+
   function startResendCountdown() {
-    let countdown = 60;
-    document.getElementById('resendCounter').classList.remove('d-none');
-    document.getElementById('resendText').textContent = 'Resending...';
+    let remainingSeconds = CONFIG.timer.resend;
+    resendBtn.disabled = true;
+    resendText.textContent = UI_TEXT.resend.sending;
+    resendCounter.classList.remove('d-none');
+    updateResendCounter(remainingSeconds);
 
     const interval = setInterval(() => {
-      countdown--;
-      document.getElementById('countdown').textContent = countdown;
+      remainingSeconds--;
+      updateResendCounter(remainingSeconds);
 
-      if (countdown === 0) {
+      if (remainingSeconds === 0) {
         clearInterval(interval);
-        document.getElementById('resendCounter').classList.add('d-none');
-        document.getElementById('resendText').textContent = 'Resend OTP';
+        resendCounter.classList.add('d-none');
+        resendText.textContent = UI_TEXT.resend.default;
         resendBtn.disabled = false;
       }
     }, 1000);
   }
-
-  // Show toast notification
-  function showNotification(title, message, type = 'info') {
-    toastTitle.textContent = title;
-    toastMessage.textContent = message;
-    
-    const toastElement = document.getElementById('notificationToast');
-    toastElement.className = 'toast';
-    
-    if (type === 'success') {
-      toastElement.classList.add('text-success');
-    } else if (type === 'error') {
-      toastElement.classList.add('text-danger');
-    }
-    
-    notificationToast.show();
-  }
-
-  // Clear invalid state on input
-  otpInput.addEventListener('input', function() {
-    this.classList.remove('is-invalid');
-    document.getElementById('otpError').textContent = '';
-  });
 });

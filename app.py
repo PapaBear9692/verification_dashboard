@@ -111,7 +111,7 @@ def register_user():
     }
     
     # Send OTP to email
-    success, message = otp.send_otp(username, email)
+    success, message = otp.send_register_otp(username, email)
     if not success:
         return jsonify({"message": message}), 500
 
@@ -178,7 +178,7 @@ def resend_otp_registration():
         return jsonify({"message": "Registration session expired."}), 400
 
     email = pending_reg.get("email")
-    success, message = otp.send_otp(username, email)
+    success, message = otp.send_register_otp(username, email)
     
     if success:
         return jsonify({"message": message}), 200

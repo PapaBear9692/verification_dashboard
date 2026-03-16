@@ -336,7 +336,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function collectPayload() {
     return {
       username: usernameInput.value.trim(),
-      employeeID: String(employeeIdInput.value || "").trim(),
+      employeeId: String(employeeIdInput.value || "").trim(),
       fullName: fullNameInput.value.trim(),
       phone: phoneInput.value.trim(),
       password: passwordInput.value,

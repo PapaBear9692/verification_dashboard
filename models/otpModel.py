@@ -16,7 +16,7 @@ class OTPModel:
         Args:
             mail: Flask-Mail instance from the main app
             redis_host: Redis server host (default: localhost)
-            redis_port: Redis server port (default: 6379)
+            redis_port: Redis server port (default: 6079)
         """
         self.mail = mail
         self.verified_otps = {}  # Track verified OTPs in session: {username: True/False}
@@ -76,16 +76,62 @@ class OTPModel:
                 recipients=[email]
             )
             msg.body = (
-                f"Hello {username},\n\n"
-                f"Your OTP for account recovery is: {otp_code}\n\n"
-                f"This code will expire in 5 minutes.\n\n"
-                f"If you did not request this OTP, please ignore this email."
+                f"Hi {username},\n\n"
+                f"We received a request to reset the password for your account.\n\n"
+                f"Your password reset code is: {otp_code}\n\n"
+                f"For your security, this code will expire in 5 minutes.\n\n"
+                f"If you didn't request this change, you can safely ignore this email. Your password will remain unchanged.\n\n"
+                f"Best regards,\n"
+                f"Square Pharmaceuticals PLC"
             )
             self.mail.send(msg)
             
             return True, "OTP successfully sent to your email"
         except Exception as e:
             return False, f"Failed to send OTP: {str(e)}"
+
+
+
+    def send_register_otp(self, username, email):
+        """
+        same as send_otp but with different email content for registration verification
+        """
+        if not self.mail:
+            return False, "Mail service not configured"
+        
+        if not self.redis_conn:
+            return False, "Redis connection failed"
+        
+        if not email:
+            return False, "Email is required"
+
+        try:
+            otp_code = self.generate_otp()
+            
+            # Store OTP in Redis for 5 minutes (300 seconds)
+            # Key format: otp:{username}
+            self.redis_conn.setex(f"otp:{username}", 300, otp_code)
+            
+            # Send OTP via email
+            msg = Message(
+                "Your OTP for Password Reset",
+                recipients=[email]
+            )
+            msg.body = (
+                f"Welcome {username},\n\n"
+                f"To complete your account registration, please verify your email address.\n\n"
+                f"Your verification code is: {otp_code}\n\n"
+                f"This code is valid for the next 5 minutes.\n\n"
+                f"If you did not sign up for an account, please disregard this message.\n\n"
+                f"Best regards,\n"
+                f"Square Pharmaceuticals PLC"
+            )
+            self.mail.send(msg)
+            
+            return True, "OTP successfully sent to your email"
+        except Exception as e:
+            return False, f"Failed to send OTP: {str(e)}"
+
 
     def verify_otp(self, username, otp_input):
         """
