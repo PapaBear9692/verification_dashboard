@@ -107,10 +107,12 @@ class OTPModel:
 
         try:
             otp_code = self.generate_otp()
+            print(f"[DEBUG] Generating OTP for username: {username}, email: {email}, OTP: {otp_code}")
             
             # Store OTP in Redis for 5 minutes (300 seconds)
             # Key format: otp:{username}
             self.redis_conn.setex(f"otp:{username}", 300, otp_code)
+            print(f"[DEBUG] OTP stored in Redis for {username}")
             
             # Send OTP via email
             msg = Message(
@@ -127,6 +129,7 @@ class OTPModel:
                 f"Square Pharmaceuticals PLC"
             )
             self.mail.send(msg)
+            print(f"[DEBUG] Email sent to {email} for {username}")
             
             return True, "OTP successfully sent to your email"
         except Exception as e:
