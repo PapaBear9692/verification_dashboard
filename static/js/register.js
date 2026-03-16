@@ -89,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== State =====
   let pendingPayload = null;
+  let isSubmitting = false; // Prevent double submission
 
   // ===== Initialization =====
   setTimeZoneHiddenInput();
@@ -289,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   confirmBtn.addEventListener("click", async (e) => {
     e.preventDefault();
-    if (!pendingPayload) return;
+    if (!pendingPayload || isSubmitting) return; // Prevent double submission
 
     const error = validate(pendingPayload);
     if (error) {
@@ -297,6 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    isSubmitting = true;
     confirmBtn.disabled = true;
     confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Sending OTP...`;
 
@@ -313,6 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(data.message || "Registration failed");
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = `Confirm`;
+        isSubmitting = false;
       } else {
         resetRegisterForm();
         modal.hide();
@@ -322,6 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("Server unavailable. Please try again.");
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = `Confirm`;
+      isSubmitting = false;
     } finally {
       pendingPayload = null;
     }

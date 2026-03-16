@@ -9,14 +9,14 @@ class OTPModel:
     Used for user registration and password reset flows.
     """
 
-    def __init__(self, mail=None, redis_host='localhost', redis_port=6079):
+    def __init__(self, mail=None, redis_host='localhost', redis_port=6379):
         """
         Initialize OTPModel with mail and Redis configuration.
         
         Args:
             mail: Flask-Mail instance from the main app
             redis_host: Redis server host (default: localhost)
-            redis_port: Redis server port (default: 6079)
+            redis_port: Redis server port (default: 6379)
         """
         self.mail = mail
         self.verified_otps = {}  # Track verified OTPs in session: {username: True/False}
@@ -107,14 +107,16 @@ class OTPModel:
 
         try:
             otp_code = self.generate_otp()
+            print(f"[DEBUG] Generating OTP for username: {username}, email: {email}, OTP: {otp_code}")
             
             # Store OTP in Redis for 5 minutes (300 seconds)
             # Key format: otp:{username}
             self.redis_conn.setex(f"otp:{username}", 300, otp_code)
+            print(f"[DEBUG] OTP stored in Redis for {username}")
             
             # Send OTP via email
             msg = Message(
-                "Your OTP for Password Reset",
+                "Your Account Registration Verification Code",
                 recipients=[email]
             )
             msg.body = (
@@ -127,6 +129,7 @@ class OTPModel:
                 f"Square Pharmaceuticals PLC"
             )
             self.mail.send(msg)
+            print(f"[DEBUG] Email sent to {email} for {username}")
             
             return True, "OTP successfully sent to your email"
         except Exception as e:

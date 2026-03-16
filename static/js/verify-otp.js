@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
   usernameInput.value = username;
   contextInput.value = context;
   setBackLink();
-  startResendCountdown(); // Start timer on page load
+  initializeResendCountdown(); // Initialize countdown on page load
 
   // ===== Helper Functions =====
 
@@ -193,7 +193,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // ===== Resend Countdown Timer (2 minutes) =====
 
+  function initializeResendCountdown() {
+    // Initialize countdown on page load without showing "Resending..." text
+    let remainingSeconds = CONFIG.timer.resend;
+    resendBtn.disabled = true;
+    resendCounter.classList.remove('d-none');
+    updateResendCounter(remainingSeconds);
+
+    const interval = setInterval(() => {
+      remainingSeconds--;
+      updateResendCounter(remainingSeconds);
+
+      if (remainingSeconds === 0) {
+        clearInterval(interval);
+        resendCounter.classList.add('d-none');
+        resendText.textContent = UI_TEXT.resend.default;
+        resendBtn.disabled = false;
+      }
+    }, 1000);
+  }
+
   function startResendCountdown() {
+    // Start countdown when user manually clicks resend button
     let remainingSeconds = CONFIG.timer.resend;
     resendBtn.disabled = true;
     resendText.textContent = UI_TEXT.resend.sending;
