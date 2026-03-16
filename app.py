@@ -101,6 +101,16 @@ def register_user():
             "message": "All fields are required"
         }), 400
     
+    # Check db is username / email / employee_id already exists
+    result = db.register_user(
+        username, full_name, employee_id, phone, role, password, email, mode="otp"
+    )
+    if result.get("user_id") is not None:
+        return jsonify({
+            "message": "Username, email, or employee ID already exists"
+        }), 400
+    
+    
     # Store registration data temporarily in session for OTP verification
     session["pending_registration"] = {
         "username": username,
@@ -152,7 +162,8 @@ def verify_otp_registration():
         pending_reg["phone"],
         pending_reg["role"],
         pending_reg["password"],
-        pending_reg["email"]
+        pending_reg["email"],
+        mode = "registration"
     )
 
     if result.get("user_id") is not None:

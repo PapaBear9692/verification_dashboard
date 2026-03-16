@@ -158,7 +158,7 @@ class ProductDB:
             cursor.close()
             conn.close()
       
-    def register_user(self, username, full_name, employee_id, phone, role, password, email):
+    def register_user(self, username, full_name, employee_id, phone, role, password, email, mode):
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -166,6 +166,8 @@ class ProductDB:
             o_user_id = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
             created_by = "SELF"
+            #one line if:
+            mode = 'O' if mode == "otp" else 'S'
 
             cursor.callproc(
                 "verify_user_reg_prc",
@@ -178,12 +180,12 @@ class ProductDB:
                     str(phone),
                     str(role),
                     str(created_by),
+                    str(mode),
                     o_user_id,
                     o_status_msg
                 ]
             )
             result = {'user_id': o_user_id.getvalue()}
-            print("Status:", o_status_msg.getvalue())
             return result
                 
         except Exception as e:
