@@ -168,11 +168,11 @@ class OTPModel:
             attempts = self.redis_conn.incr(attempts_key)
             self.redis_conn.expire(attempts_key, self.lockout_time)
 
-            if attempts >= self.max_attempts:
+            if attempts >= self.max_attempts: # type: ignore
                 self.redis_conn.setex(lockout_key, self.lockout_time, "locked")
                 return False, "Too many failed attempts. Your account is locked for 5 minutes."
 
-            remaining_attempts = self.max_attempts - attempts
+            remaining_attempts = self.max_attempts - attempts # type: ignore
             return False, f"Invalid OTP. You have {remaining_attempts} attempts remaining."
 
     def is_otp_verified(self, username):
