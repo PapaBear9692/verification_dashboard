@@ -69,12 +69,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const csrfToken = document.querySelector('#requestOtpForm input[name="csrf_token"]').value;
     setLoading(sendOtpBtn, true, "Sending OTP...");
 
     try {
       const response = await fetch("/reset/send-otp", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
         body: JSON.stringify({ username }),
       });
 
@@ -121,12 +125,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const csrfTokenVerify = document.querySelector('#verifyOtpForm input[name="csrf_token"]').value;
     setLoading(verifyOtpBtn, true, "Verifying...");
 
     try {
       const response = await fetch("/reset/verify-otp", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfTokenVerify,
+        },
         body: JSON.stringify({ username, otp: otpValue }),
       });
 
@@ -190,12 +198,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    const csrfTokenReset = document.querySelector('#resetForm input[name="csrf_token"]').value;
     setLoading(submitBtn, true, "Resetting...");
 
     try {
       const response = await fetch("/reset", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfTokenReset,
+        },
         body: JSON.stringify({
           username,
           new_password:     newPassword,

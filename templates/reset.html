@@ -47,6 +47,7 @@
       <!-- ===================== STEP 1: Username + Request OTP ===================== -->
       <div id="step1">
         <form id="requestOtpForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <div class="mb-3">
             <label class="form-label">Username</label>
@@ -71,6 +72,7 @@
       <!-- ===================== STEP 2: Enter OTP ===================== -->
       <div id="step2" class="d-none">
         <form id="verifyOtpForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <!-- username carried forward (hidden) -->
           <input type="hidden" id="usernameForOtp" />
@@ -108,6 +110,7 @@
       <!-- ===================== STEP 3: New Password ===================== -->
       <div id="step3" class="d-none">
         <form id="resetForm" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <!-- username carried forward (hidden) -->
           <input type="hidden" id="usernameForReset" />

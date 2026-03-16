@@ -92,10 +92,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setButtonLoading(true);
 
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
     try {
       const response = await fetch("/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
         body: JSON.stringify({ username, password })
       });
 

@@ -8,9 +8,13 @@ document.addEventListener("DOMContentLoaded", () => {
      Returns { count } on success, null if not found, throws on error.
   ============================================================ */
   async function fetchSecurityCodeCount(lotNumber) {
+    const csrfToken = document.querySelector('#lotAssignForm input[name="csrf_token"]').value;
     const res = await fetch("/get/lot", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrfToken,
+      },
       credentials: "same-origin",
       body: JSON.stringify({ lotNumber }),
     });
@@ -226,8 +230,11 @@ document.addEventListener("DOMContentLoaded", () => {
   window.logoutUser = async function () {
     try {
       const response = await fetch("/logout", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('input[name="csrf_token"]').value,
+        },
         credentials: "same-origin",
       });
 
@@ -403,9 +410,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setBtnLoading(confirmBtn, true, "Submitting…");
 
     try {
+      const csrfTokenAssign = document.querySelector('#lotAssignForm input[name="csrf_token"]').value;
       const response = await fetch("/batch/assign", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfTokenAssign,
+        },
         credentials: "same-origin",
         body: JSON.stringify({ ..._pendingLotPayload, password }),
       });
@@ -480,9 +491,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setBtnLoading(exportBtn, true, "Exporting...");
 
     try {
+      const csrfTokenExport = document.querySelector('#exportSecCodeForm input[name="csrf_token"]').value;
       const response = await fetch("/security-code/export", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfTokenExport,
+        },
         credentials: "same-origin",
         body: JSON.stringify({ lotNumber: lotVal, fileFormat: formatVal }),
       });

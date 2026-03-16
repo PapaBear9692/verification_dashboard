@@ -66,7 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("/generate/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('input[name="csrf_token"]').value,
+        },
         body: JSON.stringify(payload),
       });
 
@@ -111,8 +114,11 @@ document.addEventListener("DOMContentLoaded", () => {
   window.logoutUser = async function () {
     try {
       const response = await fetch("/logout", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('input[name="csrf_token"]').value,
+        },
       });
 
       data = await response.json();
@@ -416,7 +422,10 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const response = await fetch("/generate/code", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector('#generateCodeForm input[name="csrf_token"]').value,
+          },
           body: JSON.stringify(currentPayload),
         });
 

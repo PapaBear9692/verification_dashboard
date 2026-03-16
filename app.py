@@ -3,12 +3,31 @@ import time
 import os
 from flask import Flask, jsonify, redirect, render_template, request, url_for, url_for, session
 from flask_mail import Mail
+from flask_wtf.csrf import CSRFProtect
 from models.dbModel import ProductDB
 from models.otpModel import OTPModel
 from dotenv import load_dotenv
-
+from werkzeug.security import generate_password_hash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_talisman import Talisman
 
 app = Flask(__name__)
+talisman = Talisman(app)
+app.config.from_object({
+    "SECRET_KEY": os.getenv("APP.SECRET")
+})
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"]
+)
+csrf = CSRFProtect(app)
 load_dotenv()
 app.secret_key = os.getenv("APP.SECRET") 
 
@@ -38,6 +57,7 @@ def login_page():
     return render_template('login.html')
     
 @app.route("/login", methods=["POST"])
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json()
     username = data.get("username")
@@ -85,20 +105,20 @@ def register_user():
         
 
         # Password validation
-        if len(password) < 8 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+        if len(password) < 8 or len(password) > 128 or not any(c.isupper() for c in password) or not any(c.islower() for c in password) or not any(c.isdigit() for c in password) or not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
             return jsonify({
-                "message": "Password must be at least 8 characters and contain minimum one uppercase, one lowercase, a number, and a special character"
+                "message": "Password must be between 8 and 128 characters and contain minimum one uppercase, one lowercase, a number, and a special character"
             }), 400
-
+        
         if password != confirm_password:
             return jsonify({
                 "message": "Passwords do not match"
             }), 400
         
         # Validate all fields are present
-        if not all([username, employee_id, full_name, phone, role, email]):
+        if not all([username, employee_id, full_name, phone, role, email]) or len(username) > 50 or len(employee_id) > 50 or len(full_name) > 100 or len(phone) > 20 or len(role) > 20 or len(email) > 100:
             return jsonify({
-                "message": "All fields are required"
+                "message": "All fields are required and must be within the length limits."
             }), 400
         
         # Check db is username / email / employee_id already exists
@@ -107,7 +127,7 @@ def register_user():
         )
         if result.get("user_id") is not None:
             return jsonify({
-                "message": "Username, email, or employee ID already exists"
+                "message": "Registration failed."
             }), 400
         
 
@@ -117,15 +137,16 @@ def register_user():
             "employee_id": employee_id,
             "full_name": full_name,
             "phone": phone,
-            "password": password,
+            "password_hash": generate_password_hash(password),
             "role": role,
             "email": email
         }
         
         # Send OTP to email
         success, message = otp.send_register_otp(username, email)
+        
         if not success:
-            return jsonify({"message": message}), 500
+            return jsonify({"message": "Failed to send OTP."}), 500
 
         return jsonify({
             "redirect": f"/verify-otp?username={username}&context=registration",
@@ -133,7 +154,7 @@ def register_user():
         }), 200
         
     except Exception as e:
-        return jsonify({"message": f"Registration error: {str(e)}"}), 500
+        return jsonify({"message": "Registration failed"}), 500
 
 
 @app.route("/verify-otp-registration", methods=["POST"])
@@ -162,7 +183,7 @@ def verify_otp_registration():
         pending_reg["employee_id"],
         pending_reg["phone"],
         pending_reg["role"],
-        pending_reg["password"],
+        pending_reg["password_hash"],
         pending_reg["email"],
         mode = "registration"
     )
@@ -182,6 +203,7 @@ def verify_otp_registration():
 
 
 @app.route("/resend-otp-registration", methods=["POST"])
+@limiter.limit("3 per minute")
 def resend_otp_registration():
     """
     Resend OTP during registration.
@@ -225,6 +247,7 @@ def reset():
 
 
 @app.route("/reset/send-otp", methods=["POST"])
+@limiter.limit("3 per minute")
 def reset_send_otp():
     """
     Expects JSON: { "username": "john_doe" }
@@ -252,6 +275,7 @@ def reset_send_otp():
 
 
 @app.route("/reset/verify-otp", methods=["POST"])
+@limiter.limit("5 per minute")
 def reset_verify_otp():
     """
     Expects JSON: { "username": "john_doe", "otp": "123456" }
@@ -408,7 +432,6 @@ def get_lot():
         return jsonify({"message": "Lot number is required"}), 400
 
     result = db.get_lot_code_count(lot_number)
-    print(f"Debug: get_lot_code_count('{lot_number}') returned: {result}")  # Debug log
     
     if result is None:
         return jsonify({"message": f"Lot '{lot_number}' not found"}), 404

@@ -304,10 +304,14 @@ document.addEventListener("DOMContentLoaded", () => {
     confirmBtn.disabled = true;
     confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Validating...`;
 
+    const csrfToken = document.querySelector('input[name="csrf_token"]').value;
     try {
       const response = await fetch("/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
         body: JSON.stringify(pendingPayload)
       });
 

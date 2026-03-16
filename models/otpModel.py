@@ -34,6 +34,9 @@ class OTPModel:
             print(f"Redis Connection Error: {e}")
             self.redis_conn = None
 
+        self.max_attempts = 5
+        self.lockout_time = 300  # 5 minutes in seconds
+
     def generate_otp(self):
         """
         Generate a 6-digit OTP.
@@ -147,24 +150,30 @@ class OTPModel:
         if not self.redis_conn:
             return False, "Redis connection failed"
         
-        if not username or not otp_input:
-            return False, "Username and OTP are required"
+        lockout_key = f"lockout:{username}"
+        if self.redis_conn.exists(lockout_key):
+            return False, "Too many failed attempts. Please try again later."
+        
+        otp_key = f"otp:{username}"
+        stored_otp = self.redis_conn.get(otp_key)
+        
+        if stored_otp and stored_otp == otp_input:
+            self.verified_otps[username] = True
+            # Reset attempts on successful verification
+            self.redis_conn.delete(f"attempts:{username}")
+            return True, "OTP verified successfully"
+        else:
+            # Increment failed attempts
+            attempts_key = f"attempts:{username}"
+            attempts = self.redis_conn.incr(attempts_key)
+            self.redis_conn.expire(attempts_key, self.lockout_time)
 
-        try:
-            stored_otp = self.redis_conn.get(f"otp:{username}")
-            
-            if not stored_otp:
-                return False, "OTP has expired or is invalid"
-            
-            if stored_otp == str(otp_input).strip():
-                # Mark OTP as verified in session
-                self.verified_otps[username] = True
-                # Don't delete yet - user might need to reset password
-                return True, "OTP verified successfully"
-            else:
-                return False, "Invalid OTP"
-        except Exception as e:
-            return False, f"OTP verification failed: {str(e)}"
+            if attempts >= self.max_attempts:
+                self.redis_conn.setex(lockout_key, self.lockout_time, "locked")
+                return False, "Too many failed attempts. Your account is locked for 5 minutes."
+
+            remaining_attempts = self.max_attempts - attempts
+            return False, f"Invalid OTP. You have {remaining_attempts} attempts remaining."
 
     def is_otp_verified(self, username):
         """

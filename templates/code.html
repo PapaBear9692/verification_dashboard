@@ -108,6 +108,7 @@
       <div class="card-box search-code-card">
 
         <form id="searchCodeForm" class="row g-3 align-items-end">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <!-- Input -->
           <div class="col-md-4">
@@ -168,6 +169,7 @@
       <div class="generate-card card-box">
 
         <form id="generateCodeForm" class="row g-3 align-items-end">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
           <!-- Code Count -->
           <div class="col-md-6">

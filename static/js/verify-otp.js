@@ -131,9 +131,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       const endpoint = getEndpoint().verify;
+      const csrfToken = document.querySelector('input[name="csrf_token"]').value;
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
         body: JSON.stringify({ username, otp })
       });
 
@@ -167,9 +171,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     try {
       const endpoint = getEndpoint().resend;
+      const csrfTokenResend = document.querySelector('input[name="csrf_token"]').value;
       const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfTokenResend,
+        },
         body: JSON.stringify({ username })
       });
 
