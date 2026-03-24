@@ -22,6 +22,7 @@ talisman = Talisman(
             'https://code.jquery.com/',
             'https://cdnjs.cloudflare.com/',
             'https://stackpath.bootstrapcdn.com/',
+            'https://cdn.jsdelivr.net/',
             "'unsafe-inline'"
         ],
         'style-src': [
@@ -29,6 +30,7 @@ talisman = Talisman(
             'https://stackpath.bootstrapcdn.com/',
             'https://cdnjs.cloudflare.com/',
             'https://fonts.googleapis.com/',
+            'https://cdn.jsdelivr.net/',
             "'unsafe-inline'"
         ],
         'font-src': [
