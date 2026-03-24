@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 import os
 import platform
 from flask import session
+# import pandas as pd
+# from datetime import datetime, timedelta
 
 load_dotenv()  # Load environment variables from .env file
         
@@ -89,6 +91,7 @@ class ProductDB:
         }
 
         return data
+    
 
 
     def login(self, username, password):
@@ -511,3 +514,97 @@ class ProductDB:
             cursor.close()
             conn.close()
 
+
+
+
+
+        # def get_dashboard_stats(self):
+    #     conn = self._get_connection()
+    #     cursor = conn.cursor()
+    #     try:
+    #         # Fetch raw data using oracledb
+    #         sql = "SELECT NOC, CREATED_DATE, PROD_NAME, BATCH_NO, SCRATCH_CODE FROM PRODUCT_AUTH_TEST"
+    #         cursor.execute(sql)
+    #         rows = cursor.fetchall()
+    #         columns = [desc[0] for desc in cursor.description] # type: ignore
+            
+    #         # Load into a pandas DataFrame
+    #         df = pd.DataFrame(rows, columns=columns)
+
+    #         # Ensure CREATED_DATE is a datetime object
+    #         df['CREATED_DATE'] = pd.to_datetime(df['CREATED_DATE'])
+
+    #         # --- Calculations ---
+    #         now = datetime.now()
+    #         today_start = datetime(now.year, now.month, now.day)
+            
+    #         total_generated = len(df)
+            
+    #         verified_df = df[df['NOC'] > 0]
+    #         total_verifications = len(verified_df)
+            
+    #         repeated_df = df[df['NOC'] > 1]
+    #         repeated_count = len(repeated_df)
+
+    #         genuine_count = total_verifications - repeated_count
+
+    #         # Trends
+    #         verifications_today = len(verified_df[verified_df['CREATED_DATE'] >= today_start])
+    #         trend_week = len(verified_df[verified_df['CREATED_DATE'] >= now - timedelta(days=7)])
+    #         trend_month = len(verified_df[verified_df['CREATED_DATE'] >= now - timedelta(days=30)])
+
+    #         # Suspicious ratio
+    #         suspicious_ratio = f"{(repeated_count / total_verifications * 100):.1f}%" if total_verifications > 0 else "0.0%"
+
+    #         # Hot products
+    #         hot_products = df[(df['PROD_NAME'].notna()) & (df['NOC'] > 0)] \
+    #             .groupby(['PROD_NAME', 'BATCH_NO']) \
+    #             .size() \
+    #             .nlargest(5) \
+    #             .reset_index(name='SCANS') \
+    #             .rename(columns={'PROD_NAME': 'name', 'BATCH_NO': 'batch', 'SCANS': 'scans'}) \
+    #             .to_dict('records')
+
+    #         # Recent verifications
+    #         recent_verifications_df = verified_df.sort_values(by='CREATED_DATE', ascending=False).head(5)
+    #         recent_verifications = []
+    #         for index, row in recent_verifications_df.iterrows():
+    #             status, s_class, desc = ("Genuine", "text-success", "verified") if row['NOC'] == 1 else ("Repeated", "text-warning", "already used")
+    #             recent_verifications.append({
+    #                 "time": row['CREATED_DATE'].strftime('%H:%M'),
+    #                 "code": row['SCRATCH_CODE'],
+    #                 "status": status,
+    #                 "status_class": s_class,
+    #                 "description": desc
+    #             })
+
+    #         data = {
+    #             "user_name": session.get('full_name', 'User'),
+    #             "system_health": "Healthy",
+    #             "verifications_today": f"{verifications_today:,}",
+    #             "suspicious_ratio": suspicious_ratio,
+    #             "peak_hour": "N/A",
+    #             "trend_today": f"{verifications_today:,}",
+    #             "trend_week": f"{trend_week:,}",
+    #             "trend_month": f"{trend_month:,}",
+    #             "genuine_count": f"{genuine_count:,}",
+    #             "invalid_count": "N/A",
+    #             "repeated_count": f"{repeated_count:,}",
+    #             "total_generated": f"{total_generated:,}",
+    #             "repeated_attempts": f"{repeated_count:,}",
+    #             "ip_spamming": "N/A",
+    #             "high_risk_events": "N/A",
+    #             "hot_products": hot_products,
+    #             "recent_verifications": recent_verifications,
+    #             "admin_actions": [
+    #                 {"time": "09:58", "text": "Generated <strong>1,000</strong> codes", "status": "Admin", "status_class": ""},
+    #                 {"time": "09:41", "text": "Disabled suspicious IP <strong>103.45.xx.xx</strong>", "status": "Security", "status_class": "text-danger"},
+    #             ]
+    #         }
+    #         return data
+    #     except Exception as e:
+    #         print(f"Error processing dashboard stats in Python: {e}")
+    #         return None
+    #     finally:
+    #         cursor.close()
+    #         conn.close()
