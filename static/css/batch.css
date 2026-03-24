@@ -814,6 +814,11 @@ img {
   margin-top: 0.75rem;
 }
 
+.form-control.lot-confirm-password-input {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 1px rgba(2, 127, 15, 0.35);
+}
+
 .lot-confirm-password-label {
   font-size: 0.78rem;
   font-weight: 600;
@@ -822,6 +827,7 @@ img {
   color: #374151;
   display: block;
   margin-bottom: 5px;
+  color: red
 }
 
 .lot-confirm-password-wrapper {
