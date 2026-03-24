@@ -444,11 +444,12 @@ def generate_code():
             "message": "Invalid code count",
             "redirect": url_for("code")
         }), 400
-    status_code, status_msg = db.generate_codes(quantity, username)
+    status_code, status_msg, lot_no = db.generate_codes(quantity, username)
   
     return jsonify({
         "message": f"Generated codes with status: {status_msg}",
-        "status_code": status_code
+        "status_code": status_code,
+        "lot_number": lot_no,
     }), 200
 
 @app.route('/generate/export', methods=['POST'])
@@ -466,7 +467,7 @@ def export_security_codes():
     codes = db.get_scratch_codes(lot_number)
 
     if not codes:
-        return jsonify({"message": "No codes found for the given lot number"}), 404
+        return jsonify({"message": "Lot Number Does Not Exist"}), 404
 
     df = pd.DataFrame(codes)
     output = BytesIO()

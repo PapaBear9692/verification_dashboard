@@ -311,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Skip the empty auto-appended trailing row
       if (!lotVal && count === null) return;
 
-      if (!lotVal || lotVal.length < 2) {
+      if (!lotVal || lotVal.length !== 6) {
         lotInput?.classList.add("is-invalid");
         lotInput?.classList.remove("is-valid");
         hasError = true;

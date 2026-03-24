@@ -360,21 +360,24 @@ class ProductDB:
             batch_no = ""
             o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+            o_lot_no = cursor.var(oracledb.DB_TYPE_VARCHAR)
             cursor.callproc(
                 "GEN_SCRATCH_CODE_TEST",
                 [   
                     username,
                     quantity,
                     o_status_code,
-                    o_status_msg
+                    o_status_msg,
+                    o_lot_no
                 ]
             )
             status_code= o_status_code.getvalue()
             status_msg = o_status_msg.getvalue()
-            return status_code, status_msg
+            lot_no = o_lot_no.getvalue()
+            return status_code, status_msg, lot_no
         except Exception as e:
             print("Code generation failed:", e)
-            return 0, "An error occurred while generating codes."
+            return 0, "An error occurred while generating codes.", None
         finally:
             cursor.close()
             conn.close()
@@ -414,22 +417,14 @@ class ProductDB:
         conn = self._get_connection()
         cursor = conn.cursor()
 
-        try:
-            if lot_number is None:
-                query = """
-                    SELECT SCRATCH_CODE
-                    FROM PRODUCT_AUTH_TEST
-                    WHERE LOT_NO IS NULL
-                """
-                cursor.execute(query)
-            else:
-                query = """
+        try:    
+            query = """
                     SELECT SCRATCH_CODE
                     FROM PRODUCT_AUTH_TEST 
                     WHERE LOT_NO = :lot_number
                 """
-                cursor.execute(query, {"lot_number": lot_number})
-            
+            cursor.execute(query, {"lot_number": lot_number})
+        
             codes = []
             
             # Fetch all matching rows and build the list of dictionaries

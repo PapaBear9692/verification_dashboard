@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const formatVal= formatEl?.value.trim() ?? "";
     let hasError   = false;
 
-    if (!lotVal || lotVal.length < 2) {
+    if (!lotVal || lotVal.length !== 6) {
       lotEl?.classList.add("is-invalid");
       lotEl?.classList.remove("is-valid");
       hasError = true;
@@ -528,9 +528,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
       }).showToast();
 
-      if (data.new_codes) {
-        renderSearchResults({ results: data.new_codes }, "code");
-        exportNewCodes();
+      if (data.lot_number) {
+        exportNewCodes(data.lot_number);
       }
     } catch (err) {
         setError("Server unavailable. Please try again.");
@@ -602,9 +601,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  function exportNewCodes() {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const lotVal = `New_Codes_${timestamp}`;
+  function exportNewCodes(lotNumber) {
     const formatVal = 'excel';
 
     const exportBtn = document.getElementById("exportSecCodeBtn");
@@ -614,7 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
-      body: JSON.stringify({ lotNumber: null, fileFormat: formatVal }),
+      body: JSON.stringify({ lotNumber: lotNumber, fileFormat: formatVal }),
     })
     .then(response => {
       if (!response.ok) {
@@ -627,7 +624,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then(({ blob, response }) => {
       const disposition = response.headers.get("Content-Disposition") || "";
       const filenameMatch = disposition.match(/filename="(.+?)"/);
-      const filename = filenameMatch ? filenameMatch[1] : `${lotVal}_Scratch_Codes.${formatVal}`;
+      const filename = filenameMatch ? filenameMatch[1] : `${lotNumber}_Scratch_Codes.xlsx`;
       
       downloadBlob(blob, filename);
       showToast("New codes exported successfully.", "success");
