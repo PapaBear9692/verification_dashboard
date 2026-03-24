@@ -399,7 +399,7 @@ def assign_batch():
     }), 400
 
 
-@app.route('/get/lot', methods=['POST'])
+@app.route('/batch/getlot', methods=['POST'])
 def get_lot():
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401

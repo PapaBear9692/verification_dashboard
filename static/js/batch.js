@@ -4,11 +4,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ============================================================
      LOT LOOKUP
-     Calls POST /get/lot with the typed lot number.
+     Calls POST /batch/getlot with the typed lot number.
      Returns { count } on success, null if not found, throws on error.
   ============================================================ */
   async function fetchSecurityCodeCount(lotNumber) {
-    const res = await fetch("/get/lot", {
+    const res = await fetch("/batch/getlot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ============================================================
      LOT ASSIGNMENT TABLE
      • Col 1: Lot Number (user types)
-     • Col 2: Available Security Codes (auto-filled from /get/lot)
+     • Col 2: Available Security Codes (auto-filled from /batch/getlot)
      • New row appears automatically after a valid lookup on the last row
      • tfoot shows running total
   ============================================================ */
