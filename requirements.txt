@@ -1,4 +1,11 @@
 dotenv==0.9.9
 Flask==3.1.2
+Flask-Limiter==4.1.1
+Flask-Mail==0.10.0
+openpyxl==3.1.5
 oracledb==3.4.0
+pandas==3.0.1
+redis==7.3.0
+sendgrid==6.12.5
 waitress==3.0.2
+
