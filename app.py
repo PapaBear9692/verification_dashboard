@@ -1,3 +1,6 @@
+import pandas as pd
+from io import BytesIO
+from flask import send_file
 from datetime import datetime
 import time
 import os
@@ -420,34 +423,6 @@ def get_lot():
 
 
 
-@app.route('/batch/export', methods=['POST'])
-def export_batch():
-    if not session.get("login"):
-        return jsonify({
-            "message": "Unauthorized"
-        }), 401
-
-    data = request.get_json()
-    batchNumber= data.get("batchNumber")
-    exportType= data.get("exportType")
-    exportFormat= data.get("exportFormat")
-    timezone= data.get("timezone")
-    if not all([batchNumber, exportType, exportFormat, timezone]):
-        return jsonify({
-            "message": "All fields are required"
-        }), 400
-    
-    if exportType == "summary":
-        filename = db.export_batch_summary(batchNumber)
-    elif exportType == "codes":
-        filename = db.export_batch_codes(batchNumber)
-    else:  # both
-        filename = db.export_batch_full(batchNumber)
-
-    return jsonify({
-        "filename": filename
-    }), 200
-
 
 # -------------code generation--------------
 @app.route('/generate', methods=['GET'])
@@ -470,13 +445,73 @@ def generate_code():
             "redirect": url_for("code")
         }), 400
     status_code, status_msg = db.generate_codes(quantity, username)
-    #status_code = 1
-    #status_msg = "Codes generated successfully"
-    #time.sleep(2)  # Simulate processing time
+
+    if status_code == 1:
+        # Assuming the new codes are not assigned to a lot yet, so we pass None.
+        # This might need adjustment depending on how new codes are identified.
+        new_codes = db.get_scratch_codes(None) 
+        return jsonify({
+            "message": f"Generated codes with status: {status_msg}",
+            "status_code": status_code,
+            "new_codes": new_codes
+        }), 200
+    
     return jsonify({
         "message": f"Generated codes with status: {status_msg}",
         "status_code": status_code
     }), 200
+
+@app.route('/generate/export', methods=['POST'])
+def export_security_codes():
+    if not session.get("login"):
+        return jsonify({"message": "Unauthorized"}), 401
+
+    data = request.get_json()
+    lot_number = data.get("lotNumber")
+    file_format = data.get("fileFormat")
+
+    if not lot_number or not file_format:
+        return jsonify({"message": "Lot number and file format are required"}), 400
+
+    codes = db.get_scratch_codes(lot_number)
+
+    if not codes:
+        return jsonify({"message": "No codes found for the given lot number"}), 404
+
+    df = pd.DataFrame(codes)
+    output = BytesIO()
+
+    if file_format == 'excel':
+        df.to_excel(output, index=False)
+        mimetype = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        filename = f"{lot_number}_Scratch_Codes.xlsx"
+    elif file_format == 'csv':
+        df.to_csv(output, index=False)
+        mimetype = 'text/csv'
+        filename = f"{lot_number}_Scratch_Codes.csv"
+    else:
+        return jsonify({"message": "Unsupported file format"}), 400
+
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype=mimetype,
+        as_attachment=True,
+        download_name=filename
+    )
+
+@app.route('/generate/summary', methods=['GET'])
+def generate_summary():
+    if not session.get("login"):
+        return jsonify({"message": "Unauthorized"}), 401
+    
+    summary = db.get_code_summary()
+
+    if summary is None:
+        return jsonify({"message": "Could not retrieve code summary"}), 500
+
+    return jsonify(summary), 200
 
 # -------------Logout--------------
 @app.route("/logout")

@@ -208,7 +208,7 @@
 
       <div class="section-header mb-3">
         <h2 class="section-title">
-          <i class="fas fa-file-export me-2"></i>Export Security Code
+          <i class="fas fa-file-export me-2"></i>Export Scratch Code
         </h2>
       </div>
 
@@ -219,16 +219,15 @@
             <div class="col-md-6">
               <label class="form-label">Lot Number <span class="text-danger">*</span></label>
               <input type="text" class="form-control" id="exportLotInput"
-                     placeholder="e.g. LOT-001" required>
+                     placeholder="e.g. 26A001" oninput="this.value = this.value.toUpperCase()" required>
               <div class="invalid-feedback">Please enter a valid lot number.</div>
               <div class="valid-feedback">Looks good!</div>
             </div>
             <div class="col-md-6">
               <label class="form-label">File Format <span class="text-danger">*</span></label>
               <select class="form-select" id="exportFormatSelect" required>
-                <option value="" disabled selected>Select format…</option>
-                <option value="csv">CSV</option>
-                <option value="pdf">PDF</option>
+                <option value="excel" selected>Excel (.xlsx)</option>
+                <option value="csv">CSV (.csv)</option>
               </select>
               <div class="invalid-feedback">Please select a file format.</div>
               <div class="valid-feedback">Looks good!</div>

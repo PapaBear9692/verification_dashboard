@@ -380,3 +380,71 @@ class ProductDB:
             conn.close()
 
 
+    def get_code_summary(self):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                SELECT
+                    COUNT(SCRATCH_CODE) AS total_codes,
+                    SUM(CASE WHEN lot_no IS NULL THEN 1 ELSE 0 END) AS available_codes,
+                    SUM(CASE WHEN lot_no IS NOT NULL THEN 1 ELSE 0 END) AS used_codes
+                FROM PRODUCT_AUTH_TEST
+            """)
+            result = cursor.fetchone()
+            
+            if result:
+                summary = {
+                    "total": result[0] or 0,
+                    "available": result[1] or 0,
+                    "used": result[2] or 0
+                }
+                return summary
+            return {"total": 0, "available": 0, "used": 0}
+
+        except Exception as e:
+            print(f"Failed to retrieve code summary: {e}")
+            return None
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_scratch_codes(self, lot_number):
+        conn = self._get_connection()
+        cursor = conn.cursor()
+
+        try:
+            if lot_number is None:
+                query = """
+                    SELECT SCRATCH_CODE
+                    FROM PRODUCT_AUTH_TEST
+                    WHERE LOT_NO IS NULL
+                """
+                cursor.execute(query)
+            else:
+                query = """
+                    SELECT SCRATCH_CODE
+                    FROM PRODUCT_AUTH_TEST 
+                    WHERE LOT_NO = :lot_number
+                """
+                cursor.execute(query, {"lot_number": lot_number})
+            
+            codes = []
+            
+            # Fetch all matching rows and build the list of dictionaries
+            for row in cursor.fetchall():
+                codes.append({
+                    "scratch_code": row[0],
+                })
+                
+            return codes
+
+        except Exception as e:
+            print(f"Failed to retrieve scratch codes for lot {lot_number}: {e}")
+            return None
+        finally:
+            # Clean up connections
+            cursor.close()
+            conn.close()
+

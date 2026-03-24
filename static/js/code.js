@@ -14,19 +14,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Generate inputs
   const codeCountInput = generateForm.querySelector("input[name='genCodeCount']");
 
-  // Summary fields
-  const totalCodesEl = document.getElementById("totalCodes");
-  const availableCodesEl = document.getElementById("availableCodes");
-  const usedCodesEl = document.getElementById("usedCodes");
-
   // Back-to-top
   const backToTopBtn = document.getElementById("backToTopBtn");
 
   // Hidden timezone input
   setTimeZoneHiddenInput();
-
-  // Load summary on page load
-  loadCodeSummary();
 
   // Enter key triggers search (nice UX)
   searchInput.addEventListener("keydown", (e) => {
@@ -143,6 +135,82 @@ document.addEventListener("DOMContentLoaded", () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  window.resetExportSecCodeForm = function () {
+    const form = document.getElementById("exportSecCodeForm");
+    if (!form) return;
+    form.reset();
+    form.querySelectorAll(".is-invalid, .is-valid").forEach(el =>
+      el.classList.remove("is-invalid", "is-valid")
+    );
+  };
+
+  window.submitExportSecCode = async function () {
+    const form     = document.getElementById("exportSecCodeForm");
+    if (!form) return;
+
+    const lotEl    = document.getElementById("exportLotInput");
+    const formatEl = document.getElementById("exportFormatSelect");
+    const lotVal   = lotEl?.value.trim()    ?? "";
+    const formatVal= formatEl?.value.trim() ?? "";
+    let hasError   = false;
+
+    if (!lotVal || lotVal.length < 2) {
+      lotEl?.classList.add("is-invalid");
+      lotEl?.classList.remove("is-valid");
+      hasError = true;
+    } else {
+      lotEl?.classList.remove("is-invalid");
+      lotEl?.classList.add("is-valid");
+    }
+
+    if (!formatVal) {
+      formatEl?.classList.add("is-invalid");
+      formatEl?.classList.remove("is-valid");
+      hasError = true;
+    } else {
+      formatEl?.classList.remove("is-invalid");
+      formatEl?.classList.add("is-valid");
+    }
+
+    if (hasError) {
+      showToast("Please fill in all fields correctly.", "error");
+      return;
+    }
+
+    const exportBtn = document.getElementById("exportSecCodeBtn");
+    setBtnLoading(exportBtn, true, "Exporting...");
+
+    try {
+      const response = await fetch("/generate/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ lotNumber: lotVal, fileFormat: formatVal }),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        showToast(errData.message || "Export failed. Please try again.", "error");
+        return;
+      }
+
+      const blob        = await response.blob();
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const filenameMatch = disposition.match(/filename="(.+?)"/);
+      const filename = filenameMatch ? filenameMatch[1] : `${lotVal}_Scratch_Codes.${formatVal === 'excel' ? 'xlsx' : formatVal}`;
+
+
+      downloadBlob(blob, filename);
+      showToast("Export successful.", "success");
+      resetExportSecCodeForm();
+
+    } catch {
+      showToast("Server unavailable. Please try again.", "error");
+    } finally {
+      setBtnLoading(exportBtn, false, '<i class="fas fa-file-export me-1"></i> Export');
+    }
+  };
+
   /* =====================
      BACK TO TOP VISIBILITY
   ====================== */
@@ -154,6 +222,40 @@ document.addEventListener("DOMContentLoaded", () => {
   /* =====================
      HELPER FUNCTIONS
   ====================== */
+  function showToast(text, type = "success") {
+    Toastify({
+      text,
+      duration: 3500,
+      gravity: "top",
+      position: "center",
+      style: { background: type === "error" ? "#b00020" : "#02630c" },
+    }).showToast();
+  }
+
+  function setBtnLoading(btn, loading, html) {
+    if (!btn) return;
+    btn.disabled  = loading;
+    btn.innerHTML = loading
+      ? `<i class="fas fa-spinner fa-spin me-1"></i> ${html}`
+      : html;
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement("a");
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function parseFilenameFromHeader(contentDisposition) {
+    const match = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(contentDisposition);
+    const name  = match ? (match[1] || match[2]) : null;
+    return name ? decodeURIComponent(name) : null;
+  }
 
   function collectSearchPayload() {
     const type = searchByBatch.checked ? "batch" : "code";
@@ -187,20 +289,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (p.count < 1) return "Number of codes must be at least 1.";
     if (p.count > 200000) return "Too many codes at once. Please generate in smaller batches.";
     return null;
-  }
-
-  async function loadCodeSummary() {
-    try {
-      const response = await fetch("/generate/summary", { method: "GET" });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) return;
-
-      if (typeof data.total !== "undefined") totalCodesEl.textContent = data.total;
-      if (typeof data.available !== "undefined") availableCodesEl.textContent = data.available;
-      if (typeof data.used !== "undefined") usedCodesEl.textContent = data.used;
-    } catch (_) {
-      // fail silently
-    }
   }
 
   function renderSearchLoading() {
@@ -424,27 +512,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!response.ok) {
           setError(data.message || "Code generation failed");
-          window.location.href= data.redirect || "";
-          return;
-        }
+        return;
+      }
 
-        // success
-        modal.hide();
-        resetGenerateForm();
-        loadCodeSummary();
-        Toastify({
-          text: data.message || "Codes generated successfully!",
-          duration: 2000,
-          gravity: "top",
-          position: "center",
-          style: {
-            background: "#02630c", // Green success
-          },
-        }).showToast();
+      // success
+      modal.hide();
+      resetGenerateForm();
+      Toastify({
+        text: data.message || "Codes generated successfully!",
+        duration: 2000,
+        gravity: "top",
+        position: "center",
+        style: {
+          background: "#02630c", // Green success
+        },
+      }).showToast();
 
-      } catch (err) {
+      if (data.new_codes) {
+        renderSearchResults({ results: data.new_codes }, "code");
+        exportNewCodes();
+      }
+    } catch (err) {
         setError("Server unavailable. Please try again.");
-      } finally {
+    } finally {
         setLoading(false);
         restoreMainBtn();
       }
@@ -510,5 +600,43 @@ document.addEventListener("DOMContentLoaded", () => {
       btn.disabled = prevDisabled;
       btn.innerHTML = prevHtml;
     };
+  }
+
+  function exportNewCodes() {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const lotVal = `New_Codes_${timestamp}`;
+    const formatVal = 'excel';
+
+    const exportBtn = document.getElementById("exportSecCodeBtn");
+    setBtnLoading(exportBtn, true, "Exporting New Codes...");
+
+    fetch("/generate/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ lotNumber: null, fileFormat: formatVal }),
+    })
+    .then(response => {
+      if (!response.ok) {
+        return response.json().then(errData => {
+          throw new Error(errData.message || "Export failed. Please try again.");
+        });
+      }
+      return response.blob().then(blob => ({ blob, response }));
+    })
+    .then(({ blob, response }) => {
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const filenameMatch = disposition.match(/filename="(.+?)"/);
+      const filename = filenameMatch ? filenameMatch[1] : `${lotVal}_Scratch_Codes.${formatVal}`;
+      
+      downloadBlob(blob, filename);
+      showToast("New codes exported successfully.", "success");
+    })
+    .catch(error => {
+      showToast(error.message, "error");
+    })
+    .finally(() => {
+      setBtnLoading(exportBtn, false, '<i class="fas fa-file-export me-1"></i> Export');
+    });
   }
 });

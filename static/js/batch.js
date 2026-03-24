@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const brandInput   = document.getElementById("brandInput");
   const codeInput    = document.getElementById("codeInput");
   const lotTableBody = document.getElementById("lotTableBody");
+  const totalCodesEl = document.getElementById("totalCodes");
+  const availableCodesEl = document.getElementById("availableCodes");
+  const usedCodesEl = document.getElementById("usedCodes");
 
 
   /* ============================================================
@@ -91,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <input type="text"
                class="form-control lot-input"
                id="lotInput${id}"
-               placeholder="e.g. LOT-${String(id).padStart(3, "0")}"
+               placeholder="e.g. 26A${String(id).padStart(3, "0")}"
                autocomplete="off"
                oninput="this.value = this.value.toUpperCase()">
       </td>
@@ -199,6 +202,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialise with one empty row
   if (lotTableBody) _createLotTableRow();
+
+  // Load code summary
+  loadCodeSummary();
 
 
   /* ============================================================
@@ -431,82 +437,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   /* ============================================================
-     EXPORT SECURITY CODE FORM
+     CODE SUMMARY
   ============================================================ */
-
-  window.resetExportSecCodeForm = function () {
-    const form = document.getElementById("exportSecCodeForm");
-    if (!form) return;
-    form.reset();
-    form.querySelectorAll(".is-invalid, .is-valid").forEach(el =>
-      el.classList.remove("is-invalid", "is-valid")
-    );
-  };
-
-  window.submitExportSecCode = async function () {
-    const form     = document.getElementById("exportSecCodeForm");
-    if (!form) return;
-
-    const lotEl    = document.getElementById("exportLotInput");
-    const formatEl = document.getElementById("exportFormatSelect");
-    const lotVal   = lotEl?.value.trim()    ?? "";
-    const formatVal= formatEl?.value.trim() ?? "";
-    let hasError   = false;
-
-    if (!lotVal || lotVal.length < 2) {
-      lotEl?.classList.add("is-invalid");
-      lotEl?.classList.remove("is-valid");
-      hasError = true;
-    } else {
-      lotEl?.classList.remove("is-invalid");
-      lotEl?.classList.add("is-valid");
-    }
-
-    if (!formatVal) {
-      formatEl?.classList.add("is-invalid");
-      formatEl?.classList.remove("is-valid");
-      hasError = true;
-    } else {
-      formatEl?.classList.remove("is-invalid");
-      formatEl?.classList.add("is-valid");
-    }
-
-    if (hasError) {
-      showToast("Please fill in all fields correctly.", "error");
-      return;
-    }
-
-    const exportBtn = document.getElementById("exportSecCodeBtn");
-    setBtnLoading(exportBtn, true, "Exporting...");
-
+  async function loadCodeSummary() {
     try {
-      const response = await fetch("/security-code/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
-        body: JSON.stringify({ lotNumber: lotVal, fileFormat: formatVal }),
-      });
+      const response = await fetch("/generate/summary", { method: "GET" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return;
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        showToast(errData.message || "Export failed. Please try again.", "error");
-        return;
-      }
-
-      const blob        = await response.blob();
-      const defaultName = `${lotVal}_security_codes.${formatVal}`;
-      const disposition = response.headers.get("Content-Disposition") || "";
-      const fileName    = parseFilenameFromHeader(disposition) || defaultName;
-
-      downloadBlob(blob, fileName);
-      showToast("Export successful.", "success");
-
-    } catch {
-      showToast("Server unavailable. Please try again.", "error");
-    } finally {
-      setBtnLoading(exportBtn, false, '<i class="fas fa-file-export me-1"></i> Export');
+      if (typeof data.total !== "undefined") totalCodesEl.textContent = data.total;
+      if (typeof data.available !== "undefined") availableCodesEl.textContent = data.available;
+      if (typeof data.used !== "undefined") usedCodesEl.textContent = data.used;
+    } catch (_) {
+      // fail silently
     }
-  };
+  }
 
 
   /* ============================================================
