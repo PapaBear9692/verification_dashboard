@@ -445,17 +445,7 @@ def generate_code():
             "redirect": url_for("code")
         }), 400
     status_code, status_msg = db.generate_codes(quantity, username)
-
-    if status_code == 1:
-        # Assuming the new codes are not assigned to a lot yet, so we pass None.
-        # This might need adjustment depending on how new codes are identified.
-        new_codes = db.get_scratch_codes(None) 
-        return jsonify({
-            "message": f"Generated codes with status: {status_msg}",
-            "status_code": status_code,
-            "new_codes": new_codes
-        }), 200
-    
+  
     return jsonify({
         "message": f"Generated codes with status: {status_msg}",
         "status_code": status_code
