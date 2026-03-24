@@ -492,6 +492,23 @@ def export_security_codes():
         download_name=filename
     )
 
+@app.route('/generate/search', methods=['POST'])
+def search_codes_route():
+    if not session.get("login"):
+        return jsonify({"message": "Unauthorized"}), 401
+    data = request.get_json()
+    search_type = data.get('searchType')
+    query = data.get('query')
+
+    if not search_type or not query:
+        return jsonify({"message": "Search type and query are required"}), 400
+
+    results = db.search_codes(search_type, query)
+    if results is None:
+        return jsonify({"results": []})
+
+    return jsonify({"results": results})
+
 @app.route('/generate/summary', methods=['GET'])
 def generate_summary():
     if not session.get("login"):

@@ -119,6 +119,9 @@
               id="searchInput"
               name="searchInput"
               placeholder="Enter code or batch number"
+              oninput="this.value = this.value.toUpperCase()"
+              minlength="6"
+              maxlength="12"
               required
             >
           </div>

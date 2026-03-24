@@ -268,11 +268,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function validateSearch(p) {
     if (!p.query) return "Please enter a code or batch number.";
+    
+    const alphanumericRegex = /^[A-Z0-9]+$/;
 
     if (p.searchType === "code") {
-      if (p.query.length < 4) return "Code looks too short.";
-    } else {
-      if (p.query.length < 3) return "Batch number looks too short.";
+      if (p.query.length !== 12) return "Code must be exactly 12 characters long.";
+      if (!alphanumericRegex.test(p.query)) return "Code must contain only uppercase letters and numbers.";
+    } else { // batch
+      if (p.query.length !== 6) return "Batch number must be exactly 6 characters long.";
+      if (!alphanumericRegex.test(p.query)) return "Batch number must contain only uppercase letters and numbers.";
     }
     return null;
   }
@@ -308,9 +312,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderSearchResults(data, type) {
-    const results = Array.isArray(data.results) ? data.results : [];
+    const result = data.results;
 
-    if (results.length === 0) {
+    if (!result || !result.data) {
       searchResults.innerHTML = `
         <div class="alert alert-warning mb-0">
           <i class="fas fa-triangle-exclamation me-1"></i> No results found.
@@ -319,60 +323,41 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const title = type === "batch" ? "Batch Results" : "Code Results";
-
-    const rows = results
-      .map((r, idx) => {
-        const code = r.code ?? "—";
-        const batch = r.batch ?? "—";
-        const status = r.status ?? "—";
-        const createdAt = r.created_at ?? "—";
-        const usedAt = r.used_at ?? "—";
-
-        const statusBadge =
-          String(status).toLowerCase() === "used"
-            ? `<span class="badge text-bg-danger">Used</span>`
-            : String(status).toLowerCase() === "available"
-              ? `<span class="badge text-bg-success">Available</span>`
-              : `<span class="badge text-bg-secondary">${escapeHtml(String(status))}</span>`;
-
-        return `
-          <tr>
-            <td>${idx + 1}</td>
-            <td><code>${escapeHtml(String(code))}</code></td>
-            <td>${escapeHtml(String(batch))}</td>
-            <td>${statusBadge}</td>
-            <td>${escapeHtml(String(createdAt))}</td>
-            <td>${escapeHtml(String(usedAt))}</td>
-          </tr>
-        `;
-      })
-      .join("");
-
-    searchResults.innerHTML = `
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="fw-semibold">${escapeHtml(title)}</div>
-        <div class="text-muted small">Found: ${results.length}</div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-sm table-striped align-middle">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Code</th>
-              <th>Batch</th>
-              <th>Status</th>
-              <th>Created</th>
-              <th>Used</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-        </table>
-      </div>
-    `;
+    if (result.type === 'batch_summary') {
+      const summary = result.data;
+      searchResults.innerHTML = `
+        <div class="fw-semibold">Batch Summary</div>
+        <div class="card mt-2">
+          <div class="card-body">
+            <h5 class="card-title">Lot Number: ${escapeHtml(summary.lot_no)}</h5>
+            <p class="card-text">Product: ${escapeHtml(summary.prod_name)}</p>
+            <p class="card-text">Batch: ${escapeHtml(summary.batch_no)}</p>
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Total Codes
+                <span class="badge bg-primary rounded-pill">${summary.total_codes}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Used Codes
+                <span class="badge bg-danger rounded-pill">${summary.used_codes}</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                Available Codes
+                <span class="badge bg-success rounded-pill">${summary.available_codes}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      `;
+    } else if (result.type === 'code_details') {
+        const details = result.data;
+        let detailsHtml = '<div class="fw-semibold">Code Details</div><table class="table table-sm table-striped mt-2">';
+        for (const key in details) {
+            detailsHtml += `<tr><th scope="row">${escapeHtml(key)}</th><td>${escapeHtml(details[key])}</td></tr>`;
+        }
+        detailsHtml += '</table>';
+        searchResults.innerHTML = detailsHtml;
+    }
   }
 
   function clearSearchResults() {
