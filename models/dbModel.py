@@ -455,13 +455,14 @@ class ProductDB:
                     SELECT
                         LOT_NO,
                         PROD_NAME,
+                        PROD_CODE,
                         BATCH_NO,
                         COUNT(SCRATCH_CODE),
                         SUM(CASE WHEN NOC > 0 THEN 1 ELSE 0 END),
                         SUM(CASE WHEN NOC = 0 OR NOC IS NULL THEN 1 ELSE 0 END)
                     FROM PRODUCT_AUTH_TEST
                     WHERE LOT_NO = :query
-                    GROUP BY LOT_NO, PROD_NAME, BATCH_NO
+                    GROUP BY LOT_NO, PROD_NAME, PROD_CODE, BATCH_NO
                 """
                 cursor.execute(sql, {'query': query})
                 row = cursor.fetchone()
@@ -471,10 +472,11 @@ class ProductDB:
                         'data': {
                             'Lot Number': row[0],
                             'Product Name': row[1] if row[1] else 'N/A',
-                            'Assigned Batch Number': row[2] if row[2] else 'N/A',
-                            'Total Codes': row[3],
-                            'Used Codes': row[4],
-                            'Available Codes': row[5]
+                            'Product Code': row[2] if row[2] else 'N/A',
+                            'Assigned Batch Number': row[3] if row[3] else 'Unassigned',
+                            'Total Codes': row[4],
+                            'Used Codes': row[5],
+                            'Available Codes': row[6]
                         }
                     }
                 return None
@@ -491,7 +493,7 @@ class ProductDB:
                     details = {
                         'Scratch Code': row[0],
                         'Lot Number': row[1] if row[1] else 'N/A',
-                        'Assigned Batch Number': row[2] if row[2] else 'N/A',
+                        'Assigned Batch Number': row[2] if row[2] else 'Unassigned',
                         'Product Name': row[3] if row[3] else 'N/A',
                         'Product Code': row[4] if row[4] else 'N/A',
                         'Manufacture Date': row[5].strftime('%Y-%m-%d') if row[5] else 'N/A',

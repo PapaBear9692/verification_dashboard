@@ -329,21 +329,22 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="fw-semibold">Batch Summary</div>
         <div class="card mt-2">
           <div class="card-body">
-            <h5 class="card-title">Lot Number: ${escapeHtml(summary.lot_no)}</h5>
-            <p class="card-text">Product: ${escapeHtml(summary.prod_name)}</p>
-            <p class="card-text">Batch: ${escapeHtml(summary.batch_no)}</p>
+            <h5 class="card-title">Lot Number: ${escapeHtml(summary['Lot Number'])}</h5>
+            <p class="card-text">Product Name: ${escapeHtml(summary['Product Name'])}</p>
+            <p class="card-text">Product Code: ${escapeHtml(summary['Product Code'])}</p>
+            <p class="card-text">Assigned Batch Number: ${escapeHtml(summary['Assigned Batch Number'])}</p>
             <ul class="list-group list-group-flush">
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 Total Codes
-                <span class="badge bg-primary rounded-pill">${summary.total_codes}</span>
+                <span class="badge bg-primary rounded-pill">${summary['Total Codes']}</span>
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 Used Codes
-                <span class="badge bg-danger rounded-pill">${summary.used_codes}</span>
+                <span class="badge bg-danger rounded-pill">${summary['Used Codes']}</span>
               </li>
               <li class="list-group-item d-flex justify-content-between align-items-center">
                 Available Codes
-                <span class="badge bg-success rounded-pill">${summary.available_codes}</span>
+                <span class="badge bg-success rounded-pill">${summary['Available Codes']}</span>
               </li>
             </ul>
           </div>
