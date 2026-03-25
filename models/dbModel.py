@@ -416,26 +416,56 @@ class ProductDB:
             cursor.close()
             conn.close()
 
+    # def get_scratch_codes(self, lot_number):
+    #     conn = self._get_connection()
+    #     cursor = conn.cursor()
+
+    #     try:    
+    #         query = """
+    #                 SELECT SCRATCH_CODE
+    #                 FROM PRODUCT_AUTH_TEST 
+    #                 WHERE LOT_NO = :lot_number
+    #             """
+    #         cursor.execute(query, {"lot_number": lot_number})
+        
+    #         codes = []
+            
+    #         # Fetch all matching rows and build the list of dictionaries
+    #         for row in cursor.fetchall():
+    #             codes.append({
+    #                 "scratch_code": row[0],
+    #             })
+                
+    #         return codes
+
+    #     except Exception as e:
+    #         print(f"Failed to retrieve scratch codes for lot {lot_number}: {e}")
+    #         return None
+    #     finally:
+    #         # Clean up connections
+    #         cursor.close()
+    #         conn.close()
+
     def get_scratch_codes(self, lot_number):
         conn = self._get_connection()
         cursor = conn.cursor()
+        try:
+            # Call the function and get the returned REF CURSOR
+            ref_cursor = cursor.callfunc("EMD_SYS.get_scratch_codes", oracledb.DB_TYPE_CURSOR, [lot_number])
 
-        try:    
-            query = """
-                    SELECT SCRATCH_CODE
-                    FROM PRODUCT_AUTH_TEST 
-                    WHERE LOT_NO = :lot_number
-                """
-            cursor.execute(query, {"lot_number": lot_number})
-        
             codes = []
+            # Fetch results from the REF CURSOR
+            if ref_cursor:
+                for row in ref_cursor:
+                    # Assuming the function returns a single column 'SCRATCH_CODE'
+                    codes.append({
+                        "scratch_code": row[0]
+                    })
             
-            # Fetch all matching rows and build the list of dictionaries
-            for row in cursor.fetchall():
-                codes.append({
-                    "scratch_code": row[0],
-                })
-                
+            # Handle the 'NOT FOUND' case where the function returns a single row with 'NOT FOUND'
+            if len(codes) == 1 and codes[0]["scratch_code"] == 'NOT FOUND':
+                return []
+
             return codes
 
         except Exception as e:
