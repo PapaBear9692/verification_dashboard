@@ -850,7 +850,7 @@ img {
   padding: 0;
   font-size: 0.85rem;
   line-height: 1;
-  tap-highlight-color: transparent;
+  /* tap-highlight-color: transparent; */
 }
 
 .lot-confirm-password-error {
