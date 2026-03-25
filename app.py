@@ -11,7 +11,7 @@ from models.otpModel import OTPModel
 from dotenv import load_dotenv
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="/admin/static")
 load_dotenv()
 app.secret_key = os.getenv("APP.SECRET") 
 
