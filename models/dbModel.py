@@ -416,35 +416,7 @@ class ProductDB:
             cursor.close()
             conn.close()
 
-    # def get_scratch_codes(self, lot_number):
-    #     conn = self._get_connection()
-    #     cursor = conn.cursor()
 
-    #     try:    
-    #         query = """
-    #                 SELECT SCRATCH_CODE
-    #                 FROM PRODUCT_AUTH_TEST 
-    #                 WHERE LOT_NO = :lot_number
-    #             """
-    #         cursor.execute(query, {"lot_number": lot_number})
-        
-    #         codes = []
-            
-    #         # Fetch all matching rows and build the list of dictionaries
-    #         for row in cursor.fetchall():
-    #             codes.append({
-    #                 "scratch_code": row[0],
-    #             })
-                
-    #         return codes
-
-    #     except Exception as e:
-    #         print(f"Failed to retrieve scratch codes for lot {lot_number}: {e}")
-    #         return None
-    #     finally:
-    #         # Clean up connections
-    #         cursor.close()
-    #         conn.close()
 
     def get_scratch_codes(self, lot_number):
         conn = self._get_connection()

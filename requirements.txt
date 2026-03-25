@@ -6,6 +6,5 @@ openpyxl==3.1.5
 oracledb==3.4.0
 pandas==3.0.1
 redis==7.3.0
-sendgrid==6.12.5
 waitress==3.0.2
 
