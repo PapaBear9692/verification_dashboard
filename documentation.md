@@ -41,7 +41,7 @@ The project is built using the following technologies:
 Before you begin, ensure you have the following installed:
 
 *   Python 3.10
-*   Oracle Instant Client 19.3
+*   Oracle Instant Client 19.30
 *   Redis Server
 *   An Oracle Database instance
 
@@ -51,7 +51,7 @@ Follow these steps to set up the project locally:
 
 1.  **Clone the repository:**
     ```bash
-    git clone <your-repository-url> verification_dashboard
+    git clone <your-repository-url>
     cd verification_dashboard
     ```
 

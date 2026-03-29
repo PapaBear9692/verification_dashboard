@@ -14,10 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
       credentials: "same-origin",
       body: JSON.stringify({ lotNumber }),
     });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error("Server error");
-    const data = await res.json();
-    return { count: data.available_codes };
+    if (!res.ok) {
+        if (res.status === 404) {
+            const data = await res.json().catch(() => ({}));
+            return { status: "not-found", ...data };
+        }
+        throw new Error("Server error");
+    }
+    return await res.json();
   }
 
 
@@ -68,6 +72,12 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "not-found":
         td.innerHTML = `<span class="sec-code-display">Not found</span>`;
+        break;
+      case "not-available":
+        td.innerHTML = `<span class="sec-code-display text-danger">Not available</span>`;
+        break;
+      case "already-used":
+        td.innerHTML = `<span class="sec-code-display text-danger">Already used</span>`;
         break;
     }
   }
@@ -145,12 +155,23 @@ document.addEventListener("DOMContentLoaded", () => {
     _lotDebounceTimers[rowId] = setTimeout(async () => {
       try {
         const result = await fetchSecurityCodeCount(raw);
-        if (result && typeof result.count === "number") {
-          _lotCountCache[rowId] = result.count;
-          _setCodeCell(codeCell, "found", result.count);
-          lotInput.classList.remove("is-invalid", "field-no-match");
-          lotInput.classList.add("is-valid");
-          if (_isLastRow(rowId)) _createLotTableRow({ autoFocus: false });
+        if (result && result.status) {
+          const count = result.available_codes;
+          _lotCountCache[rowId] = count > 0 ? count : null;
+
+          _setCodeCell(codeCell, result.status, count);
+
+          if (result.status === 'found') {
+            lotInput.classList.remove("is-invalid", "field-no-match");
+            lotInput.classList.add("is-valid");
+            if (_isLastRow(rowId)) _createLotTableRow({ autoFocus: false });
+          } else if (result.status === 'already-used') {
+            lotInput.classList.add("is-invalid");
+            lotInput.classList.remove("is-valid", "field-no-match");
+          } else {
+            lotInput.classList.add("field-no-match");
+            lotInput.classList.remove("is-valid", "is-invalid");
+          }
         } else {
           _lotCountCache[rowId] = null;
           _setCodeCell(codeCell, "not-found", null);
@@ -160,6 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch {
         _lotCountCache[rowId] = null;
         _setCodeCell(codeCell, "not-found", null);
+        lotInput.classList.add("field-no-match");
+        lotInput.classList.remove("is-valid", "is-invalid");
       }
       updateSecCodeTotal();
     }, 450);
@@ -288,7 +311,7 @@ document.addEventListener("DOMContentLoaded", () => {
       brandInput?.classList.add("is-valid");
     }
 
-    if (!code || code.length < 2) {
+    if (!code || !/^\d{8}$/.test(code)) {
       codeInput?.classList.add("is-invalid");
       codeInput?.classList.remove("is-valid");
       hasError = true;
@@ -301,6 +324,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const allLotRows = lotTableBody
       ? Array.from(lotTableBody.querySelectorAll("tr[data-lot-row-id]"))
       : [];
+
+    const lotNumbers = allLotRows
+      .map(tr => {
+        const lotInput = tr.querySelector(".lot-input");
+        return lotInput ? lotInput.value.trim().toUpperCase() : "";
+      })
+      .filter(lot => lot !== "");
+
+    const lotSet = new Set();
+    const duplicateLots = new Set();
+    lotNumbers.forEach(lot => {
+      if (lotSet.has(lot)) {
+        duplicateLots.add(lot);
+      } else {
+        lotSet.add(lot);
+      }
+    });
+
+    if (duplicateLots.size > 0) {
+      showToast(`Duplicate lot number(s) found: ${[...duplicateLots].join(", ")}. Please remove duplicates.`, "error");
+      allLotRows.forEach(tr => {
+        const lotInput = tr.querySelector(".lot-input");
+        const lotVal = lotInput ? lotInput.value.trim().toUpperCase() : "";
+        if (lotVal && duplicateLots.has(lotVal)) {
+          lotInput.classList.add("is-invalid");
+        } else if (lotInput && lotInput.value.trim()) {
+          lotInput.classList.remove("is-invalid");
+        }
+      });
+      return; 
+    }
 
     allLotRows.forEach((tr, i) => {
       const rowId    = tr.dataset.lotRowId;

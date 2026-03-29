@@ -413,14 +413,22 @@ def get_lot():
         return jsonify({"message": "Lot number is required"}), 400
 
     result = db.get_lot_code_count(lot_number)
-    print(f"Debug: get_lot_code_count('{lot_number}') returned: {result}")  # Debug log
     
     if result is None:
-        return jsonify({"message": f"Lot '{lot_number}' not found"}), 404
+        return jsonify({"status": "not-found", "message": f"Lot '{lot_number}' not found"}), 404
+
+    count = result.get("available_codes", 0)
+    status = "found"
+    if count == -1:
+        status = "already-used"
+    elif count == 0:
+        status = "not-available"
+
 
     return jsonify({
         "lot_number":      result["lot_number"],
-        "available_codes": int(result["available_codes"]),
+        "available_codes": count,
+        "status":          status,
     }), 200
 
 

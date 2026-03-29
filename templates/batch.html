@@ -103,8 +103,8 @@
             <div class="col-6">
               <label class="form-label">Product Code <span class="text-danger">*</span></label>
               <input type="number" class="form-control" id="codeInput"
-                     placeholder="e.g. 9876500" required>
-              <div class="invalid-feedback">Please enter a valid product code (at least 2 characters).</div>
+                     placeholder="e.g. 12345678" minlength="8" maxlength="8" required oninput="if(this.value.length > 8) this.value = this.value.slice(0, 8);">
+              <div class="invalid-feedback">Please enter a valid 8-digit product code.</div>
               <div class="valid-feedback">Looks good!</div>
             </div>
           </div>

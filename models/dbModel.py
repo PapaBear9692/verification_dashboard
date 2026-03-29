@@ -292,9 +292,10 @@ class ProductDB:
                 oracledb.DB_TYPE_NUMBER,  # Expected return type from the DB
                 [lot_no]             # Input parameter(s) wrapped in a list
             )
-            if lot_size != 0:
-                result = {"lot_number": lot_no.upper(), "available_codes": lot_size} if lot_size is not None else None
+            if lot_size is not None:
+                result = {"lot_number": lot_no.upper(), "available_codes": int(lot_size)}
                 return result
+            
             return None
         except Exception as e:
             print(f"Failed to retrieve lot size for lot {lot_no}:", e)
