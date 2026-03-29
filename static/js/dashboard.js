@@ -128,7 +128,7 @@ function getTimeZone() {
 
 async function logoutUser() {
     try {
-      const response = await fetch("/logout", {
+      const response = await fetch("logout", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });

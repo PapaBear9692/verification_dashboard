@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
      Returns { count } on success, null if not found, throws on error.
   ============================================================ */
   async function fetchSecurityCodeCount(lotNumber) {
-    const res = await fetch("/batch/getlot", {
+    const res = await fetch("batch/getlot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.logoutUser = async function () {
     try {
-      const response = await fetch("/logout", {
+      const response = await fetch("logout", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
@@ -409,7 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setBtnLoading(confirmBtn, true, "Submitting…");
 
     try {
-      const response = await fetch("/batch/assign", {
+      const response = await fetch("batch/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
@@ -441,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ============================================================ */
   async function loadCodeSummary() {
     try {
-      const response = await fetch("/generate/summary", { method: "GET" });
+      const response = await fetch("generate/summary", { method: "GET" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) return;
 

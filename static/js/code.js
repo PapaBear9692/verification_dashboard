@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSearchLoading();
 
     try {
-      const response = await fetch("/generate/search", {
+      const response = await fetch("generate/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.logoutUser = async function () {
     try {
-      const response = await fetch("/logout", {
+      const response = await fetch("logout", {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setBtnLoading(exportBtn, true, "Exporting...");
 
     try {
-      const response = await fetch("/generate/export", {
+      const response = await fetch("generate/export", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
@@ -488,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const restoreMainBtn = setMainGenerateBtnLoading(mainBtn, true);
 
       try {
-        const response = await fetch("/generate/code", {
+        const response = await fetch("generate/code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(currentPayload),
@@ -593,7 +593,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportBtn = document.getElementById("exportSecCodeBtn");
     setBtnLoading(exportBtn, true, "Exporting New Codes...");
 
-    fetch("/generate/export", {
+    fetch("generate/export", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "same-origin",

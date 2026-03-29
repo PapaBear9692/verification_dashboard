@@ -72,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setLoading(sendOtpBtn, true, "Sending OTP...");
 
     try {
-      const response = await fetch("/reset/send-otp", {
+      const response = await fetch("reset/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username }),
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setLoading(verifyOtpBtn, true, "Verifying...");
 
     try {
-      const response = await fetch("/reset/verify-otp", {
+      const response = await fetch("reset/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, otp: otpValue }),
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setLoading(submitBtn, true, "Resetting...");
 
     try {
-      const response = await fetch("/reset", {
+      const response = await fetch("reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

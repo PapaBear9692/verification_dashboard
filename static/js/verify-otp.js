@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
       redirectDelay: 1500
     },
     endpoints: {
-      registration: { verify: '/verify-otp-registration', resend: '/resend-otp-registration' },
-      reset: { verify: '/reset/verify-otp', resend: '/reset/send-otp' }
+      registration: { verify: 'verify-otp-registration', resend: 'resend-otp-registration' },
+      reset: { verify: 'reset/verify-otp', resend: 'reset/send-otp' }
     }
   };
 
