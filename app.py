@@ -9,9 +9,11 @@ from flask_mail import Mail
 from models.dbModel import ProductDB
 from models.otpModel import OTPModel
 from dotenv import load_dotenv
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 app = Flask(__name__, static_url_path="/admin/static")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 load_dotenv()
 app.secret_key = os.getenv("APP.SECRET") 
 
