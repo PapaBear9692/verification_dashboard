@@ -30,15 +30,21 @@ class ProductDB:
     # Initialize the DB manager with Oracle connection details.
     
     def __init__(self, user=os.getenv("DB_USER"), password=os.getenv("DB_PASSWORD"), dsn=os.getenv("DB_DSN")):
+        """Initializes the database manager with connection details."""
         self.user = user
         self.password = password
         self.dsn = dsn
 
     # Internal method to get a database connection
     def _get_connection(self):
+        """Creates and returns a new database connection."""
         return oracledb.connect(user=self.user, password=self.password, dsn=self.dsn)
 
     def get_dashboard_stats(self):
+        """
+        Retrieves and formats statistics for the dashboard.
+        Note: Currently returns mocked data.
+        """
         data = {
             "user_name": session['full_name'],
             
@@ -95,6 +101,10 @@ class ProductDB:
 
 
     def login(self, username, password):
+        """
+        Authenticates a user against the database by calling the
+        `verify_user_login_prc` stored procedure.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -137,6 +147,10 @@ class ProductDB:
 
     
     def get_user_email(self, username):
+        """
+        Retrieves a user's email from the database by calling the
+        `verify_user_get_email_prc` stored procedure.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -162,6 +176,10 @@ class ProductDB:
             conn.close()
       
     def register_user(self, username, full_name, employee_id, phone, role, password, email, mode):
+        """
+        Registers a new user in the database by calling the
+        `verify_user_reg_prc` stored procedure.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -200,6 +218,10 @@ class ProductDB:
 
 
     def reset_password(self, username, new_password, confirm_password):
+        """
+        Resets a user's password by calling the
+        `verify_user_forgot_pwd_prc` stored procedure.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
         
@@ -237,6 +259,10 @@ class ProductDB:
     
 
     def assign_batch(self, lot_number, product_code, product_name, username):
+        """
+        Assigns product details to a lot by calling the
+        `INSERT_PRODUCT_AUTH_MASTER` stored procedure.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -282,6 +308,10 @@ class ProductDB:
 
 
     def get_lot_code_count(self, lot_no):
+        """
+        Retrieves the number of available codes for a given lot number by
+        calling the `get_lot_size` database function.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -307,6 +337,10 @@ class ProductDB:
     
 
     def export_batch_codes(self, batchNumber):
+        """
+        Exports all security codes associated with a given batch number.
+        Note: Currently returns mocked data.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -324,6 +358,10 @@ class ProductDB:
 
 
     def export_batch_summary(self, batchNumber):
+        """
+        Exports a summary for a given batch number.
+        Note: Currently returns a mocked filename.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -341,6 +379,10 @@ class ProductDB:
 
 
     def export_batch_full(self, batchNumber):
+        """
+        Exports the full details for a given batch number.
+        Note: Currently returns a mocked filename.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -357,6 +399,10 @@ class ProductDB:
 
 
     def generate_codes(self,quantity, username):
+        """
+        Generates a specified quantity of new scratch codes by calling the
+        `GEN_SCRATCH_CODE_TEST` stored procedure.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -388,6 +434,10 @@ class ProductDB:
 
 
     def get_code_summary(self):
+        """
+        Retrieves a summary of total, available, and used codes from the
+        `PRODUCT_AUTH_TEST` table.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
 
@@ -420,6 +470,10 @@ class ProductDB:
 
 
     def get_scratch_codes(self, lot_number):
+        """
+        Fetches all scratch codes associated with a specific lot number by calling
+        the `EMD_SYS.get_scratch_codes` database function.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
         try:
@@ -450,6 +504,10 @@ class ProductDB:
             conn.close()
 
     def search_codes(self, search_type, query):
+        """
+        Searches for code or batch details in the `PRODUCT_AUTH_TEST` table
+        based on the provided query and search type.
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
         try:

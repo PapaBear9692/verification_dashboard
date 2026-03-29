@@ -35,15 +35,18 @@ otp = OTPModel(mail=mail)
 # -------------Landing Page--------------
 @app.route('/', methods=['GET'])
 def welcome():
+    """Renders the public landing page."""
     return render_template('welcome.html')
 
 # -------------Authentication--------------
 @app.route('/login', methods=['GET'])
 def login_page():
+    """Renders the login page."""
     return render_template('login.html')
     
 @app.route("/login", methods=["POST"])
 def login():
+    """Handles user login requests."""
     data = request.get_json()
     username = data.get("username")
     password = data.get("password")
@@ -70,12 +73,14 @@ def login():
 # -------------Register New Account--------------
 @app.route('/register', methods=['GET'])
 def register():
+    """Renders the user registration page."""
     return render_template('register.html')
 
 @app.route("/register", methods=["POST"])
 def register_user():
     """
-    Registration Step 1: Validate user data and send OTP to email.
+    Handles the first step of user registration: validates user data,
+    checks for existing users, and sends an OTP to the provided email.
     """
     try:
         data = request.get_json()
@@ -144,7 +149,8 @@ def register_user():
 @app.route("/verify-otp-registration", methods=["POST"])
 def verify_otp_registration():
     """
-    Registration Step 2: Verify OTP and complete registration.
+    Handles the second step of registration: verifies the provided OTP
+    and creates the user account in the database.
     """
     data = request.get_json()
     username = str(data.get("username", "")).strip()
@@ -188,9 +194,7 @@ def verify_otp_registration():
 
 @app.route("/resend-otp-registration", methods=["POST"])
 def resend_otp_registration():
-    """
-    Resend OTP during registration.
-    """
+    """Handles requests to resend the OTP during registration."""
     data = request.get_json()
     username = str(data.get("username", "")).strip()
 
@@ -212,7 +216,7 @@ def resend_otp_registration():
 
 @app.route('/verify-otp', methods=['GET'])
 def verify_otp_page():
-    """Show OTP verification page."""
+    """Renders the generic OTP verification page."""
     return render_template('verify-otp.html')
 
 
@@ -226,14 +230,15 @@ def verify_otp_page():
 
 @app.route('/reset', methods=['GET'])
 def reset():
+    """Renders the password reset page."""
     return render_template('reset.html')
 
 
 @app.route("/reset/send-otp", methods=["POST"])
 def reset_send_otp():
     """
-    Expects JSON: { "username": "john_doe" }
-    Looks up the user's registered email from DB, then sends OTP.
+    Handles the first step of password reset: sends an OTP to the user's
+    registered email address.
     """
     data = request.get_json()
     username = str(data.get("username", "")).strip()
@@ -259,7 +264,7 @@ def reset_send_otp():
 @app.route("/reset/verify-otp", methods=["POST"])
 def reset_verify_otp():
     """
-    Expects JSON: { "username": "john_doe", "otp": "123456" }
+    Handles the second step of password reset: verifies the provided OTP.
     """
     data = request.get_json()
     username = str(data.get("username", "")).strip()
@@ -278,8 +283,7 @@ def reset_verify_otp():
 @app.route("/reset", methods=["POST"])
 def reset_password():
     """
-    Final step — only runs if OTP has been verified in this session.
-    Expects JSON: { "username": "...", "new_password": "...", "confirm_password": "..." }
+    Handles the final step of password reset after successful OTP verification.
     """
     data = request.get_json()
     username = str(data.get("username", "")).strip()
@@ -308,6 +312,7 @@ def reset_password():
 # -------------Dashboard--------------
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
+    """Renders the main dashboard page, requires user to be logged in."""
     if not session.get("login"):
         return redirect(url_for("login_page"))
     
@@ -315,6 +320,7 @@ def dashboard():
 
 @app.route('/dashboard-data')
 def get_dashboard_data():
+    """Provides dashboard statistics as a JSON object."""
     data = db.get_dashboard_stats()
     return jsonify(data)
 
@@ -323,6 +329,7 @@ def get_dashboard_data():
 # -------------batch assign--------------
 @app.route('/batch', methods=['GET'])
 def batch():
+    """Renders the batch assignment page."""
     if not session.get("login"):
         return redirect(url_for("login_page"))
     return render_template('batch.html')
@@ -331,6 +338,7 @@ def batch():
 
 @app.route('/batch/assign', methods=['POST'])
 def assign_batch():
+    """Handles the submission of the batch assignment form."""
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401
 
@@ -403,6 +411,9 @@ def assign_batch():
 
 @app.route('/batch/getlot', methods=['POST'])
 def get_lot():
+    """
+    Fetches the available code count and status for a given lot number.
+    """
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401
 
@@ -437,10 +448,12 @@ def get_lot():
 # -------------code generation--------------
 @app.route('/generate', methods=['GET'])
 def code():
+    """Renders the security code generation page."""
     return render_template('code.html')
 
 @app.route('/generate/code', methods=['POST'])
 def generate_code():
+    """Handles requests to generate a specified quantity of security codes."""
     if not session.get("login"):
         return jsonify({
             "message": "Unauthorized",
@@ -464,6 +477,7 @@ def generate_code():
 
 @app.route('/generate/export', methods=['POST'])
 def export_security_codes():
+    """Exports security codes for a given lot number to an Excel or CSV file."""
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401
 
@@ -504,6 +518,7 @@ def export_security_codes():
 
 @app.route('/generate/search', methods=['POST'])
 def search_codes_route():
+    """Handles search requests for batch numbers or individual scratch codes."""
     if not session.get("login"):
         return jsonify({"message": "Unauthorized"}), 401
     data = request.get_json()
