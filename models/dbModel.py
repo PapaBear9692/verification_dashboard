@@ -555,13 +555,32 @@ class ProductDB:
                     }
                 return None
             elif search_type == 'code':
-                sql = """SELECT
-                            SCRATCH_CODE, LOT_NO, BATCH_NO, PROD_NAME, PROD_CODE,
-                            MNF_DT, EXP_DT, NOC, CREATED_DATE, GEO
-                         FROM PRODUCT_AUTH
-                         WHERE SCRATCH_CODE = :query"""
-                cursor.execute(sql, {'query': query})
-                row = cursor.fetchone()
+                o_cursor = cursor.var(oracledb.DB_TYPE_CURSOR)
+                o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+                o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+
+                cursor.callproc(
+                    "EMD_SYS.get_scratch_code_details",
+                    [
+                        query,
+                        o_cursor,
+                        o_status_code,
+                        o_status_msg
+                    ]
+                )
+
+                status_code = o_status_code.getvalue()
+                status_msg = o_status_msg.getvalue()
+                ref_cursor = o_cursor.getvalue()
+
+                if status_code != 1:
+                    print(f"Scratch code details procedure failed for code {query}: {status_msg}")
+                    return None
+
+                row = None
+                if ref_cursor:
+                    row = ref_cursor.fetchone()
+
                 if row:
                     details = {
                         'Scratch Code': row[0],
@@ -573,7 +592,13 @@ class ProductDB:
                         'Expiry Date': row[6].strftime('%Y-%m-%d') if row[6] else 'N/A',
                         'Number of Checks': row[7] if row[7] is not None else 0,
                         'Generated On': row[8].strftime('%Y-%m-%d %H:%M:%S') if row[8] else 'N/A',
-                        'Last Check Location': row[9] if row[9] else 'N/A'
+                        'Last Check Location': row[9] if row[9] else 'N/A',
+                        'Generic': row[10] if row[10] else 'N/A',
+                        'Manufacturer': row[11] if row[11] else 'N/A',
+                        'MAC': row[12] if row[12] else 'N/A',
+                        'Created By': row[13] if row[13] else 'N/A',
+                        'Updated By': row[14] if row[14] else 'N/A',
+                        'Updated Date': row[15].strftime('%Y-%m-%d %H:%M:%S') if row[15] else 'N/A'
                     }
                     return {
                         'type': 'code_details',
