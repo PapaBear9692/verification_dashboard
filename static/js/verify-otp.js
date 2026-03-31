@@ -60,8 +60,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function setBackLink() {
     const links = {
-      registration: { href: '/register', text: 'Back to Registration' },
-      reset: { href: '/reset', text: 'Back to Password Reset' }
+      registration: { href: 'register', text: 'Back to Registration' },
+      reset: { href: 'reset', text: 'Back to Password Reset' }
     };
 
     const link = links[context] || links.registration;
@@ -144,9 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         setTimeout(() => {
           if (context === 'registration') {
-            window.location.href = `/login?verified=true&username=${encodeURIComponent(username)}`;
+            window.location.href = `login?verified=true&username=${encodeURIComponent(username)}`;
           } else if (context === 'reset') {
-            window.location.href = `/reset?step=3&username=${encodeURIComponent(username)}`;
+            window.location.href = `reset?step=3&username=${encodeURIComponent(username)}`;
           }
         }, CONFIG.timer.redirectDelay);
       } else {
