@@ -9,7 +9,7 @@ from flask import session
 load_dotenv()  # Load environment variables from .env file
         
 if platform.system() == "Windows":
-    oracledb.init_oracle_client(lib_dir="C:/oracle/product/instantclient_23_9")
+    oracledb.init_oracle_client(lib_dir="C:/instantclient_23_0")
 else:
     oracledb.init_oracle_client()
 
@@ -401,7 +401,7 @@ class ProductDB:
     def generate_codes(self,quantity, username):
         """
         Generates a specified quantity of new scratch codes by calling the
-        `GEN_SCRATCH_CODE_TEST` stored procedure.
+        `GEN_SCRATCH_CODE` stored procedure.
         """
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -412,7 +412,8 @@ class ProductDB:
             o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
             o_lot_no = cursor.var(oracledb.DB_TYPE_VARCHAR)
             cursor.callproc(
-                "GEN_SCRATCH_CODE_TEST",
+              #  "GEN_SCRATCH_CODE_test", for testing
+                "GEN_SCRATCH_CODE",
                 [   
                     username,
                     quantity,
@@ -436,7 +437,7 @@ class ProductDB:
     def get_code_summary(self):
         """
         Retrieves a summary of total, available, and used codes from the
-        `PRODUCT_AUTH_TEST` table.
+        `PRODUCT_AUTH` table.
         """
         conn = self._get_connection()
         cursor = conn.cursor()
@@ -447,7 +448,7 @@ class ProductDB:
                     COUNT(SCRATCH_CODE) AS total_codes,
                     SUM(CASE WHEN lot_no IS NULL THEN 1 ELSE 0 END) AS available_codes,
                     SUM(CASE WHEN lot_no IS NOT NULL THEN 1 ELSE 0 END) AS used_codes
-                FROM PRODUCT_AUTH_TEST
+                FROM PRODUCT_AUTH
             """)
             result = cursor.fetchone()
             
@@ -505,28 +506,40 @@ class ProductDB:
 
     def search_codes(self, search_type, query):
         """
-        Searches for code or batch details in the `PRODUCT_AUTH_TEST` table
+        Searches for code or batch details in the `PRODUCT_AUTH` table
         based on the provided query and search type.
         """
         conn = self._get_connection()
         cursor = conn.cursor()
+        # 'batch' = lot_no (type varchar2)
         try:
             if search_type == 'batch':
-                sql = """
-                    SELECT
-                        LOT_NO,
-                        PROD_NAME,
-                        PROD_CODE,
-                        BATCH_NO,
-                        COUNT(SCRATCH_CODE),
-                        SUM(CASE WHEN NOC > 0 THEN 1 ELSE 0 END),
-                        SUM(CASE WHEN NOC = 0 OR NOC IS NULL THEN 1 ELSE 0 END)
-                    FROM PRODUCT_AUTH_TEST
-                    WHERE LOT_NO = :query
-                    GROUP BY LOT_NO, PROD_NAME, PROD_CODE, BATCH_NO
-                """
-                cursor.execute(sql, {'query': query})
-                row = cursor.fetchone()
+                o_cursor = cursor.var(oracledb.DB_TYPE_CURSOR)
+                o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+                o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+
+                cursor.callproc(
+                    "EMD_SYS.get_lot_scratch_summary",
+                    [
+                        query,
+                        o_cursor,
+                        o_status_code,
+                        o_status_msg
+                    ]
+                )
+
+                status_code = o_status_code.getvalue()
+                status_msg = o_status_msg.getvalue()
+                ref_cursor = o_cursor.getvalue()
+
+                if status_code != 1:
+                    print(f"Batch summary procedure failed for lot {query}: {status_msg}")
+                    return None
+
+                row = None
+                if ref_cursor:
+                    row = ref_cursor.fetchone()
+
                 if row:
                     return {
                         'type': 'batch_summary',
@@ -541,12 +554,11 @@ class ProductDB:
                         }
                     }
                 return None
-            # If searching by scratch code, return detailed info about that code
             elif search_type == 'code':
                 sql = """SELECT
                             SCRATCH_CODE, LOT_NO, BATCH_NO, PROD_NAME, PROD_CODE,
                             MNF_DT, EXP_DT, NOC, CREATED_DATE, GEO
-                         FROM PRODUCT_AUTH_TEST
+                         FROM PRODUCT_AUTH
                          WHERE SCRATCH_CODE = :query"""
                 cursor.execute(sql, {'query': query})
                 row = cursor.fetchone()
@@ -586,7 +598,7 @@ class ProductDB:
     #     cursor = conn.cursor()
     #     try:
     #         # Fetch raw data using oracledb
-    #         sql = "SELECT NOC, CREATED_DATE, PROD_NAME, BATCH_NO, SCRATCH_CODE FROM PRODUCT_AUTH_TEST"
+    #         sql = "SELECT NOC, CREATED_DATE, PROD_NAME, BATCH_NO, SCRATCH_CODE FROM PRODUCT_AUTH"
     #         cursor.execute(sql)
     #         rows = cursor.fetchall()
     #         columns = [desc[0] for desc in cursor.description] # type: ignore
