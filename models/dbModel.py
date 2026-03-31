@@ -443,23 +443,34 @@ class ProductDB:
         cursor = conn.cursor()
 
         try:
-            cursor.execute("""
-                SELECT
-                    COUNT(SCRATCH_CODE) AS total_codes,
-                    SUM(CASE WHEN lot_no IS NULL THEN 1 ELSE 0 END) AS available_codes,
-                    SUM(CASE WHEN lot_no IS NOT NULL THEN 1 ELSE 0 END) AS used_codes
-                FROM PRODUCT_AUTH
-            """)
-            result = cursor.fetchone()
-            
-            if result:
-                summary = {
-                    "total": result[0] or 0,
-                    "available": result[1] or 0,
-                    "used": result[2] or 0
-                }
-                return summary
-            return {"total": 0, "available": 0, "used": 0}
+            o_total_codes = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_available_codes = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_used_codes = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_code = cursor.var(oracledb.DB_TYPE_NUMBER)
+            o_status_msg = cursor.var(oracledb.DB_TYPE_VARCHAR)
+
+            cursor.callproc(
+                "EMD_SYS.get_code_statistics",
+                [
+                    o_total_codes,
+                    o_available_codes,
+                    o_used_codes,
+                    o_status_code,
+                    o_status_msg
+                ]
+            )
+
+            status_code = o_status_code.getvalue()
+            status_msg = o_status_msg.getvalue()
+            if status_code != 1:
+                print(f"Failed to retrieve code summary: {status_msg}")
+                return {"total": 0, "available": 0, "used": 0}
+
+            return {
+                "total": int(o_total_codes.getvalue() or 0),
+                "available": int(o_available_codes.getvalue() or 0),
+                "used": int(o_used_codes.getvalue() or 0)
+            }
 
         except Exception as e:
             print(f"Failed to retrieve code summary: {e}")
