@@ -138,7 +138,7 @@ def register_user():
             return jsonify({"message": message}), 500
 
         return jsonify({
-            "redirect": f"/verify-otp?username={username}&context=registration",
+            "redirect": f"verify-otp?username={username}&context=registration",
             "message": "OTP sent to your email"
         }), 200
         
