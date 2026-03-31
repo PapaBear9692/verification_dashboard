@@ -58,11 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const TOASTIFY_CONFIG = {
-    text,
     duration: 4000,
     gravity: "top",
     position: "center",
-    style: { background: type === "error" ? "#b00020" : "#02630c" },
   };
   
 
@@ -99,8 +97,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ===== Helper Functions =====
 
-  function showToast(message) {
-    Toastify({ text: message, ...TOASTIFY_CONFIG }).showToast();
+  function showToast(message, type = "error") {
+    Toastify({
+      text: message,
+      ...TOASTIFY_CONFIG,
+      style: { background: type === "error" ? "#b00020" : "#02630c" },
+    }).showToast();
   }
 
   function setErrorMessage(fieldId, message) {
@@ -296,7 +298,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const error = validate(pendingPayload);
     if (error) {
-      showToast(error);
+      showToast(error, "error");
       return;
     }
 
@@ -319,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       
       if (!response.ok) {
-        showToast(data.message || "Registration failed");
+        showToast(data.message || "Registration failed", "error");
         modal.hide();
         confirmBtn.disabled = false;
         confirmBtn.innerHTML = `Confirm`;
@@ -338,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 500);
       }
     } catch (error) {
-      showToast("Server unavailable. Please try again.");
+      showToast("Server unavailable. Please try again.", "error");
       modal.hide();
       confirmBtn.disabled = false;
       confirmBtn.innerHTML = `Confirm`;
