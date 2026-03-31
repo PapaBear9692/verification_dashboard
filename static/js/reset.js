@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Redirect to verify-otp page with username and context
-      window.location.href = `/verify-otp?username=${encodeURIComponent(username)}&context=reset`;
+      window.location.href = `verify-otp?username=${encodeURIComponent(username)}&context=reset`;
 
     } catch (err) {
       showError("Server unavailable. Please try again.");

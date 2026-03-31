@@ -9,7 +9,7 @@ from flask import session
 load_dotenv()  # Load environment variables from .env file
         
 if platform.system() == "Windows":
-    oracledb.init_oracle_client(lib_dir="C:/instantclient_23_0")
+    oracledb.init_oracle_client(lib_dir="C:/oracle/product/instantclient_23_9")
 else:
     oracledb.init_oracle_client()
 
